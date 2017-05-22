@@ -7,6 +7,7 @@ Finance::Calendar - represents the trading calendar.
 =head1 SYNOPSIS
 
     use Finance::Calendar;
+    use Date::Utility;
 
     my $calendar = {
         holidays => {
@@ -38,9 +39,7 @@ Finance::Calendar - represents the trading calendar.
 
 =head1 DESCRIPTION
 
-This class is responsible for providing trading times or holidays related information of a given exchange on a specific date.
-
-This object could live longer as it is now stateless but currently it is re-created on each pricing.
+This class is responsible for providing trading times or holidays related information of a given financial stock exchange on a specific date.
 
 =cut
 
@@ -74,7 +73,7 @@ has calendar => (
 
 =head2 trades_on
 
-->trades_on($exchange_symbol, $date_object);
+->trades_on($exchange_object, $date_object);
 
 Returns true if trading is done on the day of a given Date::Utility.
 
@@ -91,7 +90,7 @@ sub trades_on {
 
 =head2 trade_date_before
 
-->trade_date_before($exchange_symbol, $date_object);
+->trade_date_before($exchange_object, $date_object);
 
 Returns a Date::Utility object for the previous trading day of an exchange for the given date.
 
@@ -116,7 +115,7 @@ sub trade_date_before {
 
 =head2 trade_date_after
 
-->trade_date_after($exchange_symbol, $date_object);
+->trade_date_after($exchange_object, $date_object);
 
 Returns a Date::Utility object of the next trading day of an exchange for a given date.
 
@@ -141,7 +140,7 @@ sub trade_date_after {
 
 =head2 trading_date_for
 
-->trading_date_for($exchange_symbol, $date_object);
+->trading_date_for($exchange_object, $date_object);
 
 The date on which trading is considered to be taking place even if it is not the same as the GMT date.
 Note that this does not handle trading dates are offset forward beyond the next day (24h). It will need additional work if these are found to exist.
@@ -166,7 +165,7 @@ sub trading_date_for {
 
 =head2 calendar_days_to_trade_date_after
 
-->calendar_days_to_trade_date_after($exchange_symbol, $date_object);
+->calendar_days_to_trade_date_after($exchange_object, $date_object);
 
 Returns the number of calendar days between a given Date::Utility
 and the next day on which trading is open.
@@ -184,7 +183,7 @@ Memoize::memoize('calendar_days_to_trade_date_after', NORMALIZER => '_normalize_
 =head2 trading_days_between
 
 
-->trading_days_between($exchange_symbol, Date::Utility->new('4-May-10'),Date::Utility->new('5-May-10'));
+->trading_days_between($exchange_object, Date::Utility->new('4-May-10'),Date::Utility->new('5-May-10'));
 
 Returns the number of trading days _between_ two given dates.
 
@@ -201,7 +200,7 @@ Memoize::memoize('trading_days_between', NORMALIZER => '_normalize_on_dates');
 
 =head2 holiday_days_between
 
-->holiday_days_between($exchange_symbol, Date::Utility->new('4-May-10'),Date::Utility->new('5-May-10'));
+->holiday_days_between($exchange_object, Date::Utility->new('4-May-10'),Date::Utility->new('5-May-10'));
 
 Returns the number of holidays _between_ two given dates.
 
@@ -220,7 +219,7 @@ Memoize::memoize('holiday_days_between', NORMALIZER => '_normalize_on_dates');
 
 =head2 is_open
 
-->is_open($exchange_symbol);
+->is_open($exchange_object);
 
 Returns true is exchange is open now, false otherwise.
 
@@ -234,7 +233,7 @@ sub is_open {
 
 =head2 is_open_at
 
-->is_open_at($exchange_symbol, $epoch);
+->is_open_at($exchange_object, $epoch);
 
 Return true is exchange is open at the given epoch, false otherwise.
 
@@ -254,7 +253,7 @@ sub is_open_at {
 
 =head2 seconds_since_open_at
 
-->seconds_since_open_at($exchange_symbol, $epoch);
+->seconds_since_open_at($exchange_object, $epoch);
 
 Returns the number of seconds since the exchange opened from the given epoch.
 
@@ -268,7 +267,7 @@ sub seconds_since_open_at {
 
 =head2 seconds_since_close_at
 
-->seconds_since_close_at($exchange_symbol, $epoch);
+->seconds_since_close_at($exchange_object, $epoch);
 
 Returns the number of seconds since the exchange closed from the given epoch.
 
@@ -282,7 +281,7 @@ sub seconds_since_close_at {
 
 =head2 opening_on
 
-->opening_on($exchange_symbol, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
+->opening_on($exchange_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
 
 Returns the opening time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
 
@@ -296,7 +295,7 @@ sub opening_on {
 
 =head2 closing_on
 
-->closing_on($exchange_symbol, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
+->closing_on($exchange_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
 
 Returns the closing time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
 
@@ -325,7 +324,7 @@ sub standard_closing_on {
 
 =head2 settlement_on
 
-->settlement_on($exchange_symbol, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
+->settlement_on($exchange_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
 
 Returns the settlement time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
 
@@ -339,7 +338,7 @@ sub settlement_on {
 
 =head2 trading_breaks
 
-->trading_breaks($exchange_symbol, $date_object);
+->trading_breaks($exchange_object, $date_object);
 
 Defines the breaktime for this exchange.
 
@@ -353,7 +352,7 @@ sub trading_breaks {
 
 =head2 closes_early_on
 
-->closes_early_on($exchange_symbol, $date_object);
+->closes_early_on($exchange_object, $date_object);
 
 Returns true if the exchange closes early on the given date.
 
@@ -378,7 +377,7 @@ sub closes_early_on {
 
 =head2 opens_late_on
 
-->opens_late_on($exchange_symbol, $date_object);
+->opens_late_on($exchange_object, $date_object);
 
 Returns true if the exchange opens late on the given date.
 
@@ -441,7 +440,7 @@ sub regularly_adjusts_trading_hours_on {
 
 =head2 is_in_dst_at
 
-->is_in_dst_at($exchange_symbol, $date_object);
+->is_in_dst_at($exchange_object, $date_object);
 
 Is this exchange trading on daylight savings times for the given epoch?
 
@@ -462,7 +461,7 @@ Memoize::memoize(
 
 =head2 seconds_of_trading_between_epochs
 
-->seconds_of_trading_between_epochs($exchange_symbol, $epoch1, $epoch2);
+->seconds_of_trading_between_epochs($exchange_object, $epoch1, $epoch2);
 
 Get total number of seconds of trading time between two epochs accounting for breaks.
 
@@ -499,7 +498,7 @@ sub seconds_of_trading_between_epochs {
 
 =head2 regular_trading_day_after
 
-->regular_trading_day_after($exchange_symbol, $date_object);
+->regular_trading_day_after($exchange_object, $date_object);
 
 Returns a Date::Utility object on a trading day where the exchange does not close early or open late after the given date.
 

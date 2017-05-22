@@ -48,16 +48,9 @@ use Moose;
 
 our $VERSION = 0.01;
 
-use DateTime;
-use DateTime::TimeZone;
-use Date::Utility;
-use Memoize::HashKey::Ignore;
-use Memoize;
-use Carp;
-
 use List::Util qw(min max first);
-use List::MoreUtils qw(any);
-
+use Date::Utility;
+use Memoize;
 use Finance::Exchange;
 
 =head1 ATTRIBUTES - Object Construction
@@ -456,18 +449,9 @@ Is this exchange trading on daylight savings times for the given epoch?
 sub is_in_dst_at {
     my ($self, $exchange, $epoch) = @_;
 
-    my $in_dst = 0;
-    my $tz = DateTime::TimeZone->new(name => $exchange->trading_timezone);
-    # This returns some incomprehensible number... so make it a nice bool.
-    my $is_affected_by_dst = ($tz->has_dst_changes) ? 1 : 0;
+    my $date_object = Date::Utility->new($epoch);
 
-    if ($is_affected_by_dst) {
-        my $dt = DateTime->from_epoch(epoch => $epoch);
-        $dt->set_time_zone($exchange->trading_timezone);
-        $in_dst = $dt->is_dst;
-    }
-
-    return $in_dst;
+    return $date_object->is_dst_in_zone($exchange->trading_timezone);
 }
 
 Memoize::memoize(

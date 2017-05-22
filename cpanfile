@@ -3,6 +3,7 @@ requires 'Date::Utility';
 requires 'List::Util';
 requires 'Memoize';
 requires 'Finance::Exchange';
+requires 'Carp';
 
 on test => sub {
     requires 'Test::More',                      '>= 0.98';

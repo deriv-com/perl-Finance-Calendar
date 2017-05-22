@@ -52,6 +52,7 @@ use List::Util qw(min max first);
 use Date::Utility;
 use Memoize;
 use Finance::Exchange;
+use Carp qw(croak);
 
 =head1 ATTRIBUTES - Object Construction
 

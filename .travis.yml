@@ -1,0 +1,18 @@
+sudo: false
+language: perl
+matrix:
+    fast_finish: true
+perl:
+    - "5.14.2-thr"
+before_install:
+    - git clone git@github.com:regentmarkets/travis-scripts /tmp/travis-scripts-init
+    - /tmp/travis-scripts-init/clone_branch.sh regentmarkets/travis-scripts
+    - . /tmp/travis-scripts/setup_perl.sh
+    - /tmp/travis-scripts/setup_cpan.sh
+install:
+    - cpanm --quiet --notest --skip-satisfied Dist::Zilla Dist::Zilla::App::Command::cover App::cpm
+    - cpm install -w 2 --mirror=http://cpan.cpantesters.org/ -g $(dzil authordeps --missing)
+    - cpm install -w 2 --mirror=http://cpan.cpantesters.org/ -g $(dzil listdeps --author --missing)
+
+script:
+    - dzil smoke --release --author && dzil xtest && dzil cover -test

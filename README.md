@@ -134,16 +134,6 @@ Returns the opening time (Date::Utility) of the exchange for a given Date::Utili
 
 Returns the closing time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
 
-## standard\_closing\_on
-
-This is used to fetch regular non dst closing time for an exchange.
-
-## settlement\_on
-
-\->settlement\_on($exchange\_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
-
-Returns the settlement time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
-
 ## trading\_breaks
 
 \->trading\_breaks($exchange\_object, $date\_object);
@@ -161,19 +151,6 @@ Returns true if the exchange closes early on the given date.
 \->opens\_late\_on($exchange\_object, $date\_object);
 
 Returns true if the exchange opens late on the given date.
-
-## regularly\_adjusts\_trading\_hours\_on
-
-\->regularly\_adjusts\_trading\_hours\_on('FOREX', time);
-
-Does this Exchange always shift from regular trading hours on Dates "like"
-the provided Date?
-
-## is\_in\_dst\_at
-
-\->is\_in\_dst\_at($exchange\_object, $date\_object);
-
-Is this exchange trading on daylight savings times for the given epoch?
 
 ## seconds\_of\_trading\_between\_epochs
 

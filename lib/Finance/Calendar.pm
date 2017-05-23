@@ -307,35 +307,6 @@ sub closing_on {
     return $self->closes_early_on($exchange, $when) // $self->_get_exchange_open_times($exchange, $when, 'daily_close');
 }
 
-=head2 standard_closing_on
-
-This is used to fetch regular non dst closing time for an exchange.
-
-=cut
-
-sub standard_closing_on {
-    my ($self, $exchange, $when) = @_;
-
-    $when = $self->trading_date_for($exchange, $when);
-
-    return $self->closes_early_on($exchange, $when) if (($exchange->symbol eq 'FOREX' or $exchange->symbol eq 'METAL') and $when->day_of_week == 5);
-    return $when->truncate_to_day->plus_time_interval($exchange->market_times->{standard}->{daily_close});
-}
-
-=head2 settlement_on
-
-->settlement_on($exchange_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
-
-Returns the settlement time (Date::Utility) of the exchange for a given Date::Utility, undefined otherwise.
-
-=cut
-
-sub settlement_on {
-    my ($self, $exchange, $when) = @_;
-
-    return $self->_get_exchange_open_times($exchange, $when, 'daily_settlement');
-}
-
 =head2 trading_breaks
 
 ->trading_breaks($exchange_object, $date_object);
@@ -399,65 +370,6 @@ sub opens_late_on {
 
     return $opens_late;
 }
-
-=head2 regularly_adjusts_trading_hours_on
-
-->regularly_adjusts_trading_hours_on('FOREX', time);
-
-Does this Exchange always shift from regular trading hours on Dates "like"
-the provided Date?
-
-=cut
-
-sub regularly_adjusts_trading_hours_on {
-    my ($self, $exchange, $when) = @_;
-
-    return if $when->day_of_week != 5;
-
-    my $changes;
-
-    my $rule = 'Fridays';
-    if ($exchange->symbol eq 'FOREX' or $exchange->symbol eq 'METAL') {
-        $changes = {
-            'daily_close' => {
-                to   => '21h',
-                rule => $rule,
-            }};
-    } elsif ($exchange->symbol eq 'JSC') {
-        $changes = {
-            'morning_close' => {
-                to   => '4h30m',
-                rule => $rule,
-            },
-            'afternoon_open' => {
-                to   => '7h',
-                rule => $rule
-            }};
-    }
-
-    return $changes;
-}
-
-=head2 is_in_dst_at
-
-->is_in_dst_at($exchange_object, $date_object);
-
-Is this exchange trading on daylight savings times for the given epoch?
-
-=cut
-
-sub is_in_dst_at {
-    my ($self, $exchange, $epoch) = @_;
-
-    my $date_object = Date::Utility->new($epoch);
-
-    return $date_object->is_dst_in_zone($exchange->trading_timezone);
-}
-
-Memoize::memoize(
-    'is_in_dst_at',
-    NORMALIZER => '_normalize_on_epoch',
-);
 
 =head2 seconds_of_trading_between_epochs
 
@@ -607,23 +519,6 @@ sub _get_holidays_for {
     return $self->_holiday_cache->{$symbol};
 }
 
-# Psuedo holidays are holidays defined by us. During this period, market is still open but less volatile.
-sub _get_pseudo_holidays {
-    my ($self, $type, $date) = @_;
-
-    my $year = $date->year;
-
-    if ($type eq 'exchange') {
-        # pseudo-holidays for exchanges are 1 week before and after Christmas Day.
-        my $christmas_day = Date::Utility->new('25-Dec-' . $year);
-        my $pseudo_start  = $christmas_day->minus_time_interval('7d');
-        return {map { $pseudo_start->plus_time_interval($_ . 'd')->days_since_epoch => 'pseudo-holiday' } (0 .. 14)};
-    } elsif ($type eq 'country') {
-        # pseudo-holiday for country is on 24-Dec and 31-Dec annually
-        return {map { Date::Utility->new($_ . '-' . $year)->days_since_epoch => 'pseudo-holiday' } qw(24-Dec 31-Dec)};
-    }
-}
-
 sub _is_in_trading_break {
     my ($self, $exchange, $when) = @_;
 
@@ -694,17 +589,6 @@ sub _get_partial_trading_for {
     }
 
     return \%partial_tradings;
-}
-
-sub _country_holiday_weight {
-    my ($self, $currency_symbol, $date) = @_;
-
-    # - weight of 0 on a country holiday
-    # - weight of 1 on a normal day
-    # - weight of 0.5 on pseudo-country-holiday
-    return 0 if $self->is_holiday_for($currency_symbol, $date);
-    return 0.5 if $self->_get_pseudo_holidays('country', $date)->{$date->days_since_epoch};
-    return 1;
 }
 
 sub _days_between {
@@ -962,12 +846,6 @@ sub _normalize_on_just_dates {
     my ($self, @dates) = @_;
 
     return join '|', (map { Date::Utility->new($_)->days_since_epoch } @dates);
-}
-
-sub _normalize_on_epoch {
-    my ($self, $exchange, $epoch) = @_;
-
-    return join '|', ($exchange->symbol, $epoch);
 }
 
 no Moose;

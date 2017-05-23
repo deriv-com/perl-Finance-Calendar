@@ -491,6 +491,31 @@ sub is_holiday_for {
     return $holidays->{$date->days_since_epoch};
 }
 
+=head2 is_in_dst_at
+
+->is_in_dst_at($exchange_object, $date_object);
+
+Is this exchange trading on daylight savings times for the given epoch?
+
+=cut
+
+{
+    my %cache;
+
+    sub is_in_dst_at {
+        my ($self, $exchange, $epoch) = @_;
+
+        if (my $cache = $cache{$exchange->symbol}{$epoch}) {
+            return $cache;
+        }
+
+        my $date_object = Date::Utility->new($epoch);
+        $cache{$exchange->symbol}{$epoch} = $date_object->is_dst_in_zone($exchange->trading_timezone);
+
+        return $cache{$exchange->symbol}{$epoch};
+    }
+}
+
 ### PRIVATE ###
 
 has _holiday_cache => (

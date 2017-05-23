@@ -178,3 +178,9 @@ Check if it is a holiday for a specific exchange or a country on a specific day
 \->is\_holiday\_for('USD', Date::Utility->new); # United States country holiday
 
 Returns the description of the holiday if it is a holiday.
+
+## is\_in\_dst\_at
+
+\->is\_in\_dst\_at($exchange\_object, $date\_object);
+
+Is this exchange trading on daylight savings times for the given epoch?

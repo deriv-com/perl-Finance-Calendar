@@ -220,67 +220,6 @@ subtest 'open/close' => sub {
     is($tc->is_open_at($ASX, Date::Utility->new('8-Apr-13 05:30:00')), 1,     'ASX open at 5:30am GMT during Aussie "winter".');
 };
 
-subtest 'standard_closing_on' => sub {
-    note("DST ends on 3 April 2016");
-    my $in_dst  = Date::Utility->new('2016-03-01');
-    my $non_dst = Date::Utility->new('2016-03-04');
-    is $tc->standard_closing_on($ASX, $in_dst)->epoch, $in_dst->plus_time_interval('6h')->epoch,
-        'standard_closing_on return non DST closing on 1 April 2016';
-    is $tc->standard_closing_on($ASX, $non_dst)->epoch, $non_dst->plus_time_interval('6h')->epoch,
-        'standard_closing_on return non DST closing on 4 April 2016';
-
-    my $early_close = Date::Utility->new('2009-12-24');
-    is $tc->standard_closing_on($HKSE, $early_close)->epoch, $early_close->plus_time_interval('7h40m')->epoch, 'no early close for indices';
-
-    my $friday               = Date::Utility->new('2016-03-25');
-    my $normal_thursday      = Date::Utility->new('2016-03-24');
-    my $early_close_thursday = Date::Utility->new('2016-12-24');
-    is $tc->standard_closing_on($FOREX, $friday)->epoch, $friday->plus_time_interval('21h')->epoch, 'standard close for friday is 21:00 GMT';
-    is $tc->standard_closing_on($FOREX, $normal_thursday)->epoch, $normal_thursday->plus_time_interval('23h59m59s')->epoch,
-        'normal standard closing is 23:59:59 GMT';
-    is $tc->standard_closing_on($FOREX, $early_close_thursday)->epoch, $early_close_thursday->plus_time_interval('23h59m59s')->epoch,
-        'normal standard closing is 23:59:59 GMT';
-
-    is $tc->standard_closing_on($METAL, $friday)->epoch, $friday->plus_time_interval('21h')->epoch, 'standard close for friday is 21:00 GMT';
-    is $tc->standard_closing_on($METAL, $normal_thursday)->epoch, $normal_thursday->plus_time_interval('23h59m59s')->epoch,
-        'normal standard closing is 23:59:59 GMT';
-    is $tc->standard_closing_on($METAL, $early_close_thursday)->epoch, $early_close_thursday->plus_time_interval('23h59m59s')->epoch,
-        'normal standard closing is 23:59:59 GMT';
-};
-
-subtest 'settlement_on' => sub {
-    my $non_dst  = Date::Utility->new('2017-04-12');
-    my $dst_date = Date::Utility->new('2017-10-2');
-    is $tc->settlement_on($ASX, $non_dst)->epoch,  $non_dst->plus_time_interval('9h')->epoch,  'correct settlement time in non dst period';
-    is $tc->settlement_on($ASX, $dst_date)->epoch, $dst_date->plus_time_interval('8h')->epoch, 'correct settlement time in dst period';
-};
-
-subtest 'regularly_adjusts_trading_hours_on' => sub {
-    my $monday = Date::Utility->new('2013-08-26');
-    my $friday = $monday->plus_time_interval('4d');
-
-    note 'It is expected that this long-standing close in forex will not change, so we can use it to verify the implementation.';
-    ok(!$tc->regularly_adjusts_trading_hours_on($FOREX, $monday), 'FOREX does not regularly adjust trading hours on ' . $monday->day_as_string);
-
-    my $friday_changes = $tc->regularly_adjusts_trading_hours_on($FOREX, $friday);
-    ok($friday_changes,                       'FOREX regularly adjusts trading hours on ' . $friday->day_as_string);
-    ok(exists $friday_changes->{daily_close}, ' changing daily_close');
-    is($friday_changes->{daily_close}->{to},   '21h',     '  to 21h after midnight');
-    is($friday_changes->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
-
-    ok(!$tc->regularly_adjusts_trading_hours_on($METAL, $monday), 'METAL does not regularly adjust trading hours on ' . $monday->day_as_string);
-    my $metal_friday = $tc->regularly_adjusts_trading_hours_on($METAL, $friday);
-    ok($metal_friday,                       'METAL regularly adjusts trading hours on ' . $friday->day_as_string);
-    ok(exists $metal_friday->{daily_close}, ' changing daily_close');
-    is($metal_friday->{daily_close}->{to},   '21h',     '  to 21h after midnight');
-    is($metal_friday->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
-
-    ok(!$tc->regularly_adjusts_trading_hours_on($JSC, $monday), 'JSC does not regularly adjust trading hours on ' . $monday->day_as_string);
-    my $jsc_friday = $tc->regularly_adjusts_trading_hours_on($JSC, $friday);
-    is $jsc_friday->{morning_close}->{to},  '4h30m', 'JSC adjusted morning close on friday';
-    is $jsc_friday->{afternoon_open}->{to}, '7h',    'JSC adjusted afternoon open on friday';
-};
-
 subtest 'seconds_of_trading_between' => sub {
     my $HKSE_TRADE_DURATION_DAY     = ((2 * 3600 + 29 * 60) + (2 * 3600 + 40 * 60));
     my $HKSE_TRADE_DURATION_MORNING = 2 * 3600 + 29 * 60;

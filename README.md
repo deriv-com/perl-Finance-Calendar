@@ -184,3 +184,22 @@ Returns the description of the holiday if it is a holiday.
 \->is\_in\_dst\_at($exchange\_object, $date\_object);
 
 Is this exchange trading on daylight savings times for the given epoch?
+
+## get\_exchange\_open\_times
+
+Query an exchange for valid opening times. Expects 3 parameters:
+
+- `$exchange` - a [Finance::Exchange](https://metacpan.org/pod/Finance::Exchange) instance
+- `$date` - a [Date::Utility](https://metacpan.org/pod/Date::Utility)
+- `$which` - which market information to request, see below
+
+The possible values for `$which` include:
+
+- `daily_open`
+- `daily_close`
+- `trading_breaks`
+
+Returns either `undef`, a single [Date::Utility](https://metacpan.org/pod/Date::Utility), or an arrayref of [Date::Utility](https://metacpan.org/pod/Date::Utility) instances.
+
+---
+

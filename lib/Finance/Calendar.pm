@@ -290,7 +290,7 @@ Returns the opening time (Date::Utility) of the exchange for a given Date::Utili
 sub opening_on {
     my ($self, $exchange, $when) = @_;
 
-    return $self->opens_late_on($exchange, $when) // $self->_get_exchange_open_times($exchange, $when, 'daily_open');
+    return $self->opens_late_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_open');
 }
 
 =head2 closing_on
@@ -304,7 +304,7 @@ Returns the closing time (Date::Utility) of the exchange for a given Date::Utili
 sub closing_on {
     my ($self, $exchange, $when) = @_;
 
-    return $self->closes_early_on($exchange, $when) // $self->_get_exchange_open_times($exchange, $when, 'daily_close');
+    return $self->closes_early_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_close');
 }
 
 =head2 trading_breaks
@@ -318,7 +318,7 @@ Defines the breaktime for this exchange.
 sub trading_breaks {
     my ($self, $exchange, $when) = @_;
 
-    return $self->_get_exchange_open_times($exchange, $when, 'trading_breaks');
+    return $self->get_exchange_open_times($exchange, $when, 'trading_breaks');
 }
 
 =head2 closes_early_on
@@ -561,7 +561,37 @@ sub _is_in_trading_break {
     return $in_trading_break;
 }
 
-sub _get_exchange_open_times {
+=head2 get_exchange_open_times
+
+Query an exchange for valid opening times. Expects 3 parameters:
+
+=over 4
+
+=item * C<$exchange> - a L<Finance::Exchange> instance
+
+=item * C<$date> - a L<Date::Utility>
+
+=item * C<$which> - which market information to request, see below
+
+=back
+
+The possible values for C<$which> include:
+
+=over 4
+
+=item * C<daily_open>
+
+=item * C<daily_close>
+
+=item * C<trading_breaks>
+
+=back
+
+Returns either C<undef>, a single L<Date::Utility>, or an arrayref of L<Date::Utility> instances.
+
+=cut
+
+sub get_exchange_open_times {
     my ($self, $exchange, $date, $which) = @_;
 
     my $when = (ref $date) ? $date : Date::Utility->new($date);

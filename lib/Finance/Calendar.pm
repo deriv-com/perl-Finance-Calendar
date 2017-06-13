@@ -325,14 +325,15 @@ sub trading_breaks {
 
 ->closes_early_on($exchange_object, $date_object);
 
-Returns true if the exchange closes early on the given date.
+Returns the closing time as a L<Date::Utility> instance if the exchange closes early on the given date,
+or C<undef>.
 
 =cut
 
 sub closes_early_on {
     my ($self, $exchange, $when) = @_;
 
-    return unless $self->trades_on($exchange, $when);
+    return undef unless $self->trades_on($exchange, $when);
 
     my $closes_early;
     my $listed = $self->_get_partial_trading_for($exchange, 'early_closes')->{$when->days_since_epoch};

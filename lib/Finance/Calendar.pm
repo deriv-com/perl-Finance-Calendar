@@ -350,15 +350,10 @@ sub closes_early_on {
     return undef unless $self->trades_on($exchange, $when);
 
     my $closes_early;
-    my $listed = $self->_get_partial_trading_for($exchange, 'early_closes')->{$when->days_since_epoch};
-    if ($listed) {
-        $closes_early = $when->truncate_to_day->plus_time_interval($listed);
-    } elsif (my $scheduled_changes = $self->regularly_adjusts_trading_hours_on($exchange, $when)) {
-        $closes_early = $when->truncate_to_day->plus_time_interval($scheduled_changes->{daily_close}->{to})
-            if ($scheduled_changes->{daily_close});
+    if (my $listed = $self->_get_partial_trading_for($exchange, 'early_closes')->{$when->days_since_epoch}) {
+        return $when->truncate_to_day->plus_time_interval($listed);
     }
-
-    return $closes_early;
+    return undef;
 }
 
 =head2 opens_late_on
@@ -372,18 +367,15 @@ Returns true if the exchange opens late on the given date.
 sub opens_late_on {
     my ($self, $exchange, $when) = @_;
 
-    return unless $self->trades_on($exchange, $when);
+    return undef unless $self->trades_on($exchange, $when);
 
     my $opens_late;
-    my $listed = $self->_get_partial_trading_for($exchange, 'late_opens')->{$when->days_since_epoch};
-    if ($listed) {
+
+    if (my $listed = $self->_get_partial_trading_for($exchange, 'late_opens')->{$when->days_since_epoch}) {
         $opens_late = $when->truncate_to_day->plus_time_interval($listed);
-    } elsif (my $scheduled_changes = $self->regularly_adjusts_trading_hours_on($exchange, $when)) {
-        $opens_late = $when->truncate_to_day->plus_time_interval($scheduled_changes->{daily_open}->{to})
-            if ($scheduled_changes->{daily_open});
     }
 
-    return $opens_late;
+    return $undef;
 }
 
 =head2 seconds_of_trading_between_epochs

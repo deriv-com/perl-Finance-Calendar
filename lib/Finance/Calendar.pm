@@ -117,8 +117,10 @@ sub trade_date_before {
     my $date_behind;
     my $counter = 1;
 
-    # look back at most 7 days. The previous trading day could have span over a weekend with multiple consecutive holidays.
-    while (not $date_behind and $counter < 7) {
+    # look back at most 10 days. The previous trading day could have span over a weekend with multiple consecutive holidays.
+    # Previously it was 7 days, but need to increase a little bit since there is a case
+    # where the holidays was more than 7. That was during end of ramadhan at Saudi Arabia Exchange.
+    while (not $date_behind and $counter < 10) {
         my $possible = $begin->minus_time_interval($counter . 'd');
         $date_behind = $possible if $self->trades_on($exchange, $possible);
         $counter++;

@@ -335,6 +335,56 @@ sub trading_breaks {
     return $self->get_exchange_open_times($exchange, $when, 'trading_breaks');
 }
 
+=head2 regularly_adjusts_trading_hours_on
+
+Returns a hashref of special-case changes that may apply on specific
+trading days. Currently, this applies on Fridays only:
+
+=over 4
+
+=item * for the Jakarta exchange
+
+=item * for forex or metals
+
+=back
+
+Example:
+
+ $calendar->regularly_adjusts_trading_hours_on('FOREX', time);
+
+=cut
+
+sub regularly_adjusts_trading_hours_on {
+    my ($self, $exchange, $when) = @_;
+
+    # Only applies on Fridays
+    return undef if $when->day_of_week != 5;
+
+    my $changes;
+
+    my $rule = 'Fridays';
+    if ($exchange->symbol eq 'FOREX' or $exchange->symbol eq 'METAL') {
+        $changes = {
+            'daily_close' => {
+                to   => '21h',
+                rule => $rule,
+            }};
+    } elsif ($exchange->symbol eq 'JSC') {
+        # Jakarta has pauses for Friday prayers
+        $changes = {
+            'morning_close' => {
+                to   => '4h30m',
+                rule => $rule,
+            },
+            'afternoon_open' => {
+                to   => '7h',
+                rule => $rule
+            }};
+    }
+
+    return $changes;
+}
+
 =head2 closes_early_on
 
 ->closes_early_on($exchange_object, $date_object);

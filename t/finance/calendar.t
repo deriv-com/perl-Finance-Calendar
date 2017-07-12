@@ -450,4 +450,30 @@ subtest 'is_holiday_for' => sub {
     ok $tc->is_holiday_for('USD', Date::Utility->new('2013-04-01')), 'a US holiday on 1-Apr';
 };
 
+subtest 'regularly_adjusts_trading_hours_on' => sub {
+    my $monday = Date::Utility->new('2013-08-26');
+    my $friday = $monday->plus_time_interval('4d');
+
+    note 'It is expected that this long-standing close in forex will not change, so we can use it to verify the implementation.';
+    ok(!$tc->regularly_adjusts_trading_hours_on($FOREX, $monday), 'FOREX does not regularly adjust trading hours on ' . $monday->day_as_string);
+
+    my $friday_changes = $tc->regularly_adjusts_trading_hours_on($FOREX, $friday);
+    ok($friday_changes,                       'FOREX regularly adjusts trading hours on ' . $friday->day_as_string);
+    ok(exists $friday_changes->{daily_close}, ' changing daily_close');
+    is($friday_changes->{daily_close}->{to},   '21h',     '  to 21h after midnight');
+    is($friday_changes->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
+
+    ok(!$tc->regularly_adjusts_trading_hours_on($METAL, $monday), 'METAL does not regularly adjust trading hours on ' . $monday->day_as_string);
+    my $metal_friday = $tc->regularly_adjusts_trading_hours_on($METAL, $friday);
+    ok($metal_friday,                       'METAL regularly adjusts trading hours on ' . $friday->day_as_string);
+    ok(exists $metal_friday->{daily_close}, ' changing daily_close');
+    is($metal_friday->{daily_close}->{to},   '21h',     '  to 21h after midnight');
+    is($metal_friday->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
+
+    ok(!$tc->regularly_adjusts_trading_hours_on($JSC, $monday), 'JSC does not regularly adjust trading hours on ' . $monday->day_as_string);
+    my $jsc_friday = $tc->regularly_adjusts_trading_hours_on($JSC, $friday);
+    is $jsc_friday->{morning_close}->{to},  '4h30m', 'JSC adjusted morning close on friday';
+    is $jsc_friday->{afternoon_open}->{to}, '7h',    'JSC adjusted afternoon open on friday';
+};
+
 done_testing();

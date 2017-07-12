@@ -476,4 +476,13 @@ subtest 'regularly_adjusts_trading_hours_on' => sub {
     is $jsc_friday->{afternoon_open}->{to}, '7h',    'JSC adjusted afternoon open on friday';
 };
 
+# Test regularly_adjust_trading_hours_on through closes_early_on
+subtest 'regularly_adjust_trading_hours_on_2' => sub {
+    my $monday = Date::Utility->new('2013-08-26');
+    my $friday = $monday->plus_time_interval('4d');
+
+    ok($tc->closes_early_on($FOREX, $friday), 'Forex closes early on ' . $friday->day_as_string);
+    ok($tc->closes_early_on($METAL, $friday), 'Metal closes early on ' . $friday->day_as_string);
+};
+
 done_testing();

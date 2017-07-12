@@ -10,6 +10,7 @@ before_install:
     - git config --global user.email $HOSTNAME":not-for-mail@travis-ci.org"
 install:
     - cpanm --quiet --notest --skip-satisfied Dist::Zilla Dist::Zilla::App::Command::cover App::cpm
+    - pwd
     - git clone https://github.com/binary-com/perl-Finance-Exchange && cd perl-Finance-Exchange && cpanm -n .
     - cpm install -w 2 --mirror=http://cpan.cpantesters.org/ -g $(dzil authordeps --missing)
     - cpm install -w 2 --mirror=http://cpan.cpantesters.org/ -g $(dzil listdeps --author --missing)

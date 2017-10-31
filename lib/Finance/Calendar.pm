@@ -553,9 +553,7 @@ Returns the description of the holiday if it is a holiday.
 sub is_holiday_for {
     my ($self, $symbol, $date) = @_;
 
-    my $holidays = $self->_get_holidays_for($symbol);
-
-    return $holidays->{$date->days_since_epoch};
+    return $self->_get_holidays_for($symbol, $date);
 }
 
 =head2 is_in_dst_at
@@ -585,30 +583,20 @@ Is this exchange trading on daylight savings times for the given epoch?
 
 ### PRIVATE ###
 
-has _holiday_cache => (
-    is      => 'rw',
-    default => sub { {} },
-);
-
 sub _get_holidays_for {
-    my ($self, $symbol) = @_;
+    my ($self, $symbol, $when) = @_;
 
-    my $cache = $self->_holiday_cache->{$symbol};
-
-    return $cache if $cache;
-
+    my $date     = $when->date_ddmmmyyyy;
     my $calendar = $self->calendar->{holidays};
-    my %holidays;
-    foreach my $date (keys %$calendar) {
-        foreach my $holiday_desc (keys %{$calendar->{$date}}) {
-            $holidays{Date::Utility->new($date)->days_since_epoch} = $holiday_desc
-                if (first { $symbol eq $_ } @{$calendar->{$date}{$holiday_desc}});
-        }
+    my $holiday  = $calendar->{$date};
+
+    return unless $holiday;
+
+    foreach my $holiday_desc (keys %{$calendar->{$date}}) {
+        return $holiday_desc if (first { $symbol eq $_ } @{$calendar->{$date}{$holiday_desc}});
     }
 
-    $self->_holiday_cache->{$symbol} = \%holidays;
-
-    return $self->_holiday_cache->{$symbol};
+    return;
 }
 
 sub _is_in_trading_break {

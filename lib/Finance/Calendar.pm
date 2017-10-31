@@ -586,7 +586,7 @@ Is this exchange trading on daylight savings times for the given epoch?
 sub _get_holidays_for {
     my ($self, $symbol, $when) = @_;
 
-    my $date     = $when->date_ddmmmyyyy;
+    my $date     = $when->truncate_to_day->epoch;
     my $calendar = $self->calendar->{holidays};
     my $holiday  = $calendar->{$date};
 
@@ -688,7 +688,7 @@ sub _get_partial_trading_for {
     my ($self, $exchange, $type, $when) = @_;
 
     my $cached          = $self->calendar->{$type};
-    my $date            = $when->truncate_to_day->date_ddmmmyyyy;
+    my $date            = $when->truncate_to_day->epoch;
     my $partial_defined = $cached->{$date};
 
     return unless $partial_defined;

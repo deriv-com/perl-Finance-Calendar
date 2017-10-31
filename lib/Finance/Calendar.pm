@@ -592,8 +592,8 @@ sub _get_holidays_for {
 
     return unless $holiday;
 
-    foreach my $holiday_desc (keys %{$calendar->{$date}}) {
-        return $holiday_desc if (first { $symbol eq $_ } @{$calendar->{$date}{$holiday_desc}});
+    foreach my $holiday_desc (keys %$holiday) {
+        return $holiday_desc if (first { $symbol eq $_ } @{$holiday->{$holiday_desc}});
     }
 
     return;

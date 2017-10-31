@@ -700,7 +700,7 @@ sub _get_partial_trading_for {
     my ($self, $exchange, $type, $when) = @_;
 
     my $cached          = $self->calendar->{$type};
-    my $day_epoch       = $when->truncate_to_day->epoch;
+    my $epoch           = $when->truncate_to_day->epoch;
     my $partial_defined = $cached->{$epoch};
 
     return unless $partial_defined;

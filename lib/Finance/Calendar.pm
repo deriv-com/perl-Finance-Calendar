@@ -700,13 +700,13 @@ sub _get_partial_trading_for {
     my ($self, $exchange, $type, $when) = @_;
 
     my $cached          = $self->calendar->{$type};
-    my $epoch           = $when->truncate_to_day->epoch;
-    my $partial_defined = $cached->{$epoch};
+    my $date           = $when->truncate_to_day->date_ddmmmyyyy;
+    my $partial_defined = $cached->{$date};
 
     return unless $partial_defined;
 
-    foreach my $close_time (keys %{$cached->{$epoch}}) {
-        my $symbols = $cached->{$epoch}{$close_time};
+    foreach my $close_time (keys %{$cached->{$date}}) {
+        my $symbols = $cached->{$date}{$close_time};
         return $close_time if (first { $exchange->symbol eq $_ } @$symbols);
     }
 

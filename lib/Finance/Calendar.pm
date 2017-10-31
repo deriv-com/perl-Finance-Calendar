@@ -402,7 +402,7 @@ sub closes_early_on {
     return undef unless $self->trades_on($exchange, $when);
 
     my $closes_early;
-    my $listed = $self->_get_partial_trading_for($exchange, 'early_closes')->{$when->days_since_epoch};
+    my $listed = $self->_get_partial_trading_for($exchange, 'early_closes', $when);
     if ($listed) {
         $closes_early = $when->truncate_to_day->plus_time_interval($listed);
     } elsif (my $scheduled_changes = $self->regularly_adjusts_trading_hours_on($exchange, $when)) {
@@ -427,7 +427,7 @@ sub opens_late_on {
     return unless $self->trades_on($exchange, $when);
 
     my $opens_late;
-    my $listed = $self->_get_partial_trading_for($exchange, 'late_opens')->{$when->days_since_epoch};
+    my $listed = $self->_get_partial_trading_for($exchange, 'late_opens', $when);
     if ($listed) {
         $opens_late = $when->truncate_to_day->plus_time_interval($listed);
     } elsif (my $scheduled_changes = $self->regularly_adjusts_trading_hours_on($exchange, $when)) {
@@ -553,9 +553,7 @@ Returns the description of the holiday if it is a holiday.
 sub is_holiday_for {
     my ($self, $symbol, $date) = @_;
 
-    my $holidays = $self->_get_holidays_for($symbol);
-
-    return $holidays->{$date->days_since_epoch};
+    return $self->_get_holidays_for($symbol, $date);
 }
 
 =head2 is_in_dst_at
@@ -585,30 +583,20 @@ Is this exchange trading on daylight savings times for the given epoch?
 
 ### PRIVATE ###
 
-has _holiday_cache => (
-    is      => 'rw',
-    default => sub { {} },
-);
-
 sub _get_holidays_for {
-    my ($self, $symbol) = @_;
+    my ($self, $symbol, $when) = @_;
 
-    my $cache = $self->_holiday_cache->{$symbol};
-
-    return $cache if $cache;
-
+    my $date     = $when->truncate_to_day->epoch;
     my $calendar = $self->calendar->{holidays};
-    my %holidays;
-    foreach my $date (keys %$calendar) {
-        foreach my $holiday_desc (keys %{$calendar->{$date}}) {
-            $holidays{Date::Utility->new($date)->days_since_epoch} = $holiday_desc
-                if (first { $symbol eq $_ } @{$calendar->{$date}{$holiday_desc}});
-        }
+    my $holiday  = $calendar->{$date};
+
+    return unless $holiday;
+
+    foreach my $holiday_desc (keys %$holiday) {
+        return $holiday_desc if (first { $symbol eq $_ } @{$holiday->{$holiday_desc}});
     }
 
-    $self->_holiday_cache->{$symbol} = \%holidays;
-
-    return $self->_holiday_cache->{$symbol};
+    return;
 }
 
 sub _is_in_trading_break {
@@ -697,20 +685,20 @@ sub _times_dst_key {
 
 # get partial trading data for a given exchange
 sub _get_partial_trading_for {
-    my ($self, $exchange, $type) = @_;
+    my ($self, $exchange, $type, $when) = @_;
 
-    my $cached = $self->calendar->{$type};
+    my $cached          = $self->calendar->{$type};
+    my $date            = $when->truncate_to_day->epoch;
+    my $partial_defined = $cached->{$date};
 
-    my %partial_tradings;
-    foreach my $epoch (keys %$cached) {
-        foreach my $close_time (keys %{$cached->{$epoch}}) {
-            my $symbols = $cached->{$epoch}{$close_time};
-            $partial_tradings{Date::Utility->new($epoch)->days_since_epoch} = $close_time
-                if (first { $exchange->symbol eq $_ } @$symbols);
-        }
+    return unless $partial_defined;
+
+    foreach my $close_time (keys %{$cached->{$date}}) {
+        my $symbols = $cached->{$date}{$close_time};
+        return $close_time if (first { $exchange->symbol eq $_ } @$symbols);
     }
 
-    return \%partial_tradings;
+    return;
 }
 
 sub _days_between {

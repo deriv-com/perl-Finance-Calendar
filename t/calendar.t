@@ -15,33 +15,33 @@ my $date = Date::Utility->new('2013-12-01');    # first of December 2014
 
 my $calendar = {
     holidays => {
-        "6-May-2013" => {
+        1367798400=> {
             "Early May Bank Holiday" => [qw(LSE)],
         },
-        "25-Dec-2013" => {
+        1387929600=> {
             "Christmas Day" => [qw(LSE FOREX METAL)],
         },
-        "1-Jan-2014" => {
+        1388534400=> {
             "New Year's Day" => [qw(LSE FOREX METAL)],
         },
-        "1-Apr-2013" => {
+        1364774400=> {
             "Easter Monday" => [qw(LSE USD)],
         },
     },
     early_closes => {
-        '24-Dec-2009' => {
+        1261612800=> {
             '4h30m' => ['HKSE'],
         },
-        '24-Dec-2010' => {'12h30m' => ['LSE']},
-        '24-Dec-2013' => {
+        1293148800=> {'12h30m' => ['LSE']},
+        1387843200=> {
             '12h30m' => ['LSE'],
         },
-        '22-Dec-2016' => {
+        1482364800=> {
             '18h' => ['FOREX', 'METAL'],
         },
     },
     late_opens => {
-        '24-Dec-2010' => {
+        1293148800=> {
             '2h30m' => ['HKSE'],
         },
     },

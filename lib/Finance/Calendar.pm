@@ -102,6 +102,8 @@ sub trades_on {
     return $result;
 }
 
+Memoize::memoize('trades_on', NORMALIZER => '_normalize_on_dates');
+
 =head2 trade_date_before
 
 ->trade_date_before($exchange_object, $date_object);
@@ -129,6 +131,8 @@ sub trade_date_before {
     return $date_behind;
 }
 
+Memoize::memoize('trade_date_before', NORMALIZER => '_normalize_on_dates');
+
 =head2 trade_date_after
 
 ->trade_date_after($exchange_object, $date_object);
@@ -154,6 +158,8 @@ sub trade_date_after {
     return $date_next;
 }
 
+Memoize::memoize('trade_date_after', NORMALIZER => '_normalize_on_dates');
+
 =head2 trading_date_for
 
 ->trading_date_for($exchange_object, $date_object);
@@ -178,6 +184,8 @@ sub trading_date_for {
     return $next_day if ($open_ti and $next_day->epoch + $open_ti->seconds <= $date->epoch);
     return $date->truncate_to_day;
 }
+
+Memoize::memoize('trading_date_for', NORMALIZER => '_normalize_on_dates');
 
 =head2 calendar_days_to_trade_date_after
 
@@ -309,6 +317,8 @@ sub opening_on {
     return $self->opens_late_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_open');
 }
 
+Memoize::memoize('opening_on', NORMALIZER => '_normalize_on_dates');
+
 =head2 closing_on
 
 ->closing_on($exchange_object, Date::Utility->new('25-Dec-10')); # returns undef (given Xmas is a holiday)
@@ -322,6 +332,8 @@ sub closing_on {
 
     return $self->closes_early_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_close');
 }
+
+Memoize::memoize('closing_on', NORMALIZER => '_normalize_on_dates');
 
 =head2 trading_breaks
 

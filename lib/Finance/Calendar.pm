@@ -185,8 +185,6 @@ sub trading_date_for {
     return $date->truncate_to_day;
 }
 
-Memoize::memoize('trading_date_for', NORMALIZER => '_normalize_on_dates');
-
 =head2 calendar_days_to_trade_date_after
 
 ->calendar_days_to_trade_date_after($exchange_object, $date_object);

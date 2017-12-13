@@ -93,14 +93,14 @@ sub _get_cache {
 
     return unless exists $self->_cache->{$method_name};
 
-    my $key = join "_", ($exchange->symbol, (map { $_->truncate_to_day->epoch } @dates));
+    my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
     return $self->_cache->{$method_name}{$key};
 }
 
 sub _set_cache {
     my ($self, $value, $method_name, $exchange, @dates) = @_;
 
-    my $key = join "_", ($exchange->symbol, (map { $_->truncate_to_day->epoch } @dates));
+    my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
     $self->_cache->{$method_name}{$key} = $value;
 
     return;

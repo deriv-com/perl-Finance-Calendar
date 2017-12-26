@@ -83,6 +83,29 @@ has calendar => (
     required => 1,
 );
 
+has _cache => (
+    is      => 'ro',
+    default => sub { {} },
+);
+
+sub _get_cache {
+    my ($self, $method_name, $exchange, @dates) = @_;
+
+    return unless exists $self->_cache->{$method_name};
+
+    my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
+    return $self->_cache->{$method_name}{$key};
+}
+
+sub _set_cache {
+    my ($self, $value, $method_name, $exchange, @dates) = @_;
+
+    my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
+    $self->_cache->{$method_name}{$key} = $value;
+
+    return;
+}
+
 =head1 METHODS - TRADING DAYS RELATED
 
 =head2 trades_on
@@ -96,9 +119,14 @@ Returns true if trading is done on the day of a given Date::Utility.
 sub trades_on {
     my ($self, $exchange, $when) = @_;
 
+    if (my $cache = $self->_get_cache('trades_on', $exchange, $when)) {
+        return $cache;
+    }
+
     my $really_when = $self->trading_date_for($exchange, $when);
     my $result = (@{$exchange->trading_days_list}[$really_when->day_of_week] && !$self->is_holiday_for($exchange->symbol, $really_when)) ? 1 : 0;
 
+    $self->_set_cache($result, 'trades_on', $exchange, $when);
     return $result;
 }
 
@@ -114,6 +142,11 @@ sub trade_date_before {
     my ($self, $exchange, $when) = @_;
 
     my $begin = $self->trading_date_for($exchange, $when);
+
+    if (my $cache = $self->_get_cache('trade_date_before', $exchange, $begin)) {
+        return $cache;
+    }
+
     my $date_behind;
     my $counter = 1;
 
@@ -126,6 +159,7 @@ sub trade_date_before {
         $counter++;
     }
 
+    $self->_set_cache($date_behind, 'trade_date_before', $exchange, $begin);
     return $date_behind;
 }
 
@@ -144,6 +178,10 @@ sub trade_date_after {
     my $counter = 1;
     my $begin = $self->trading_date_for($exchange, $date);
 
+    if (my $cache = $self->_get_cache('trade_date_after', $exchange, $begin)) {
+        return $cache;
+    }
+
     # look forward at most 7 days. The next trading day could have span over a weekend with multiple consecutive holidays.
     while (not $date_next and $counter <= 7) {
         my $possible = $begin->plus_time_interval($counter . 'd');
@@ -151,6 +189,7 @@ sub trade_date_after {
         $counter++;
     }
 
+    $self->_set_cache($date_next, 'trade_date_after', $exchange, $begin);
     return $date_next;
 }
 
@@ -191,10 +230,15 @@ and the next day on which trading is open.
 sub calendar_days_to_trade_date_after {
     my ($self, $exchange, $when) = @_;
 
-    return $self->trade_date_after($exchange, $when)->days_between($when);
-}
+    if (my $cache = $self->_get_cache('calendar_days_to_trade_date_after', $exchange, $when)) {
+        return $cache;
+    }
 
-Memoize::memoize('calendar_days_to_trade_date_after', NORMALIZER => '_normalize_on_dates');
+    my $number_of_days = $self->trade_date_after($exchange, $when)->days_between($when);
+
+    $self->_set_cache($number_of_days, 'calendar_days_to_trade_date_after', $exchange, $when);
+    return $number_of_days;
+}
 
 =head2 trading_days_between
 
@@ -208,11 +252,16 @@ Returns the number of trading days _between_ two given dates.
 sub trading_days_between {
     my ($self, $exchange, $begin, $end) = @_;
 
-    # Count up how many are trading days.
-    return scalar grep { $self->trades_on($exchange, $_) } @{$self->_days_between($begin, $end)};
-}
+    if (my $cache = $self->_get_cache('trading_days_between', $exchange, $begin, $end)) {
+        return $cache;
+    }
 
-Memoize::memoize('trading_days_between', NORMALIZER => '_normalize_on_dates');
+    # Count up how many are trading days.
+    my $number_of_days = scalar grep { $self->trades_on($exchange, $_) } @{$self->_days_between($begin, $end)};
+
+    $self->_set_cache($number_of_days, 'trading_days_between', $exchange, $begin, $end);
+    return $number_of_days;
+}
 
 =head2 holiday_days_between
 
@@ -225,11 +274,16 @@ Returns the number of holidays _between_ two given dates.
 sub holiday_days_between {
     my ($self, $exchange, $begin, $end) = @_;
 
-    # Count up how many are trading days.
-    return scalar grep { $self->is_holiday_for($exchange->symbol, $_) } @{$self->_days_between($begin, $end)};
-}
+    if (my $cache = $self->_get_cache('holiday_days_between', $exchange, $begin, $end)) {
+        return $cache;
+    }
 
-Memoize::memoize('holiday_days_between', NORMALIZER => '_normalize_on_dates');
+    # Count up how many are trading days.
+    my $number_of_days = scalar grep { $self->is_holiday_for($exchange->symbol, $_) } @{$self->_days_between($begin, $end)};
+
+    $self->_set_cache($number_of_days, 'holiday_days_between', $exchange, $begin, $end);
+    return $number_of_days;
+}
 
 =head1 METHODS - TRADING TIMES RELATED.
 
@@ -306,7 +360,14 @@ Returns the opening time (Date::Utility) of the exchange for a given Date::Utili
 sub opening_on {
     my ($self, $exchange, $when) = @_;
 
-    return $self->opens_late_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_open');
+    if (my $cache = $self->_get_cache('opening_on', $exchange, $when)) {
+        return $cache;
+    }
+
+    my $opening_on = $self->opens_late_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_open');
+
+    $self->_set_cache($opening_on, 'opening_on', $exchange, $when);
+    return $opening_on;
 }
 
 =head2 closing_on
@@ -320,7 +381,14 @@ Returns the closing time (Date::Utility) of the exchange for a given Date::Utili
 sub closing_on {
     my ($self, $exchange, $when) = @_;
 
-    return $self->closes_early_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_close');
+    if (my $cache = $self->_get_cache('closing_on', $exchange, $when)) {
+        return $cache;
+    }
+
+    my $closing_on = $self->closes_early_on($exchange, $when) // $self->get_exchange_open_times($exchange, $when, 'daily_close');
+
+    $self->_set_cache($closing_on, 'closing_on', $exchange, $when);
+    return $closing_on;
 }
 
 =head2 trading_breaks
@@ -718,6 +786,7 @@ sub _days_between {
 
     return \@days_between;
 }
+
 Memoize::memoize('_days_between', NORMALIZER => '_normalize_on_just_dates');
 
 ## PRIVATE _market_opens
@@ -945,12 +1014,6 @@ sub _computed_trading_seconds {
 #
 # This attaches to the static method on the class for the lifetime of this instance.
 # Since we only want the cache for our specific symbol, we need to include an identifier.
-
-sub _normalize_on_dates {
-    my ($self, $exchange, @dates) = @_;
-
-    return join '|', ($exchange->symbol, map { Date::Utility->new($_)->days_since_epoch } @dates);
-}
 
 sub _normalize_on_just_dates {
     my ($self, @dates) = @_;

@@ -121,7 +121,7 @@ subtest 'trading_days_between' => sub {
 
 subtest 'holiday_days_between' => sub {
     is $tc->holiday_days_between($LSE, Date::Utility->new('24-Dec-13'), Date::Utility->new('3-Jan-14')), 2, "two holidays over the year end on LSE.";
-    is $tc->holiday_days_between($LSE, '2017-03-03', '2017-03-06'), 0, 'no holidays over the weekend';
+    is $tc->holiday_days_between($LSE, Date::Utility->new('2017-03-03'), Date::Utility->new('2017-03-06')), 0, 'no holidays over the weekend';
 };
 
 subtest 'open/close' => sub {

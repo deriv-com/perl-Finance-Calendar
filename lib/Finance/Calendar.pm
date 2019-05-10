@@ -182,8 +182,9 @@ sub trade_date_after {
         return $cache;
     }
 
-    # look forward at most 7 days. The next trading day could have span over a weekend with multiple consecutive holidays.
-    while (not $date_next and $counter <= 7) {
+    # look forward at most 11 days. The next trading day could have span over a weekend with multiple consecutive holidays.
+    # We chosed 11 due to the fact that the longest trading holidays we have got so far was 10 days(TSE).
+    while (not $date_next and $counter <= 11) {
         my $possible = $begin->plus_time_interval($counter . 'd');
         $date_next = $possible if $self->trades_on($exchange, $possible);
         $counter++;

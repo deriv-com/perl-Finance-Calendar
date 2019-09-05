@@ -633,21 +633,10 @@ Is this exchange trading on daylight savings times for the given epoch?
 
 =cut
 
-{
-    my %cache;
+sub is_in_dst_at {
+    my ($self, $exchange, $epoch) = @_;
 
-    sub is_in_dst_at {
-        my ($self, $exchange, $epoch) = @_;
-
-        if (my $cache = $cache{$exchange->symbol}{$epoch}) {
-            return $cache;
-        }
-
-        my $date_object = Date::Utility->new($epoch);
-        $cache{$exchange->symbol}{$epoch} = $date_object->is_dst_in_zone($exchange->trading_timezone);
-
-        return $cache{$exchange->symbol}{$epoch};
-    }
+    return Date::Utility->new($epoch)->is_dst_in_zone($exchange->trading_timezone);
 }
 
 ### PRIVATE ###

@@ -460,20 +460,16 @@ subtest 'regularly_adjusts_trading_hours_on' => sub {
     my $friday_changes = $tc->regularly_adjusts_trading_hours_on($FOREX, $friday);
     ok($friday_changes,                       'FOREX regularly adjusts trading hours on ' . $friday->day_as_string);
     ok(exists $friday_changes->{daily_close}, ' changing daily_close');
-    is($friday_changes->{daily_close}->{to},   '21h',     '  to 21h after midnight');
+    is($friday_changes->{daily_close}->{to},   '20h55m',     '  to 20h55m after midnight');
     is($friday_changes->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
 
     ok(!$tc->regularly_adjusts_trading_hours_on($METAL, $monday), 'METAL does not regularly adjust trading hours on ' . $monday->day_as_string);
     my $metal_friday = $tc->regularly_adjusts_trading_hours_on($METAL, $friday);
     ok($metal_friday,                       'METAL regularly adjusts trading hours on ' . $friday->day_as_string);
     ok(exists $metal_friday->{daily_close}, ' changing daily_close');
-    is($metal_friday->{daily_close}->{to},   '21h',     '  to 21h after midnight');
+    is($metal_friday->{daily_close}->{to},   '20h55m',     '  to 20h55m after midnight');
     is($metal_friday->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
 
-    ok(!$tc->regularly_adjusts_trading_hours_on($JSC, $monday), 'JSC does not regularly adjust trading hours on ' . $monday->day_as_string);
-    my $jsc_friday = $tc->regularly_adjusts_trading_hours_on($JSC, $friday);
-    is $jsc_friday->{morning_close}->{to},  '4h30m', 'JSC adjusted morning close on friday';
-    is $jsc_friday->{afternoon_open}->{to}, '7h',    'JSC adjusted afternoon open on friday';
 };
 
 # Test regularly_adjust_trading_hours_on through closes_early_on

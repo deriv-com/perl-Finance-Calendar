@@ -413,7 +413,6 @@ trading days. Currently, this applies on Fridays only:
 
 =over 4
 
-=item * for the Jakarta exchange
 
 =item * for forex or metals
 
@@ -437,19 +436,8 @@ sub regularly_adjusts_trading_hours_on {
     if ($exchange->symbol eq 'FOREX' or $exchange->symbol eq 'METAL') {
         $changes = {
             'daily_close' => {
-                to   => '21h',
+                to   => '20h55m',
                 rule => $rule,
-            }};
-    } elsif ($exchange->symbol eq 'JSC') {
-        # Jakarta has pauses for Friday prayers
-        $changes = {
-            'morning_close' => {
-                to   => '4h30m',
-                rule => $rule,
-            },
-            'afternoon_open' => {
-                to   => '7h',
-                rule => $rule
             }};
     }
 

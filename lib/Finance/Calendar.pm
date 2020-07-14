@@ -91,7 +91,7 @@ has _cache => (
 sub _get_cache {
     my ($self, $method_name, $exchange, @dates) = @_;
 
-    return unless exists $self->_cache->{$method_name};
+    return undef unless exists $self->_cache->{$method_name};
 
     my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
     return $self->_cache->{$method_name}{$key};
@@ -103,7 +103,7 @@ sub _set_cache {
     my $key = join "_", ($exchange->symbol, (map { $self->trading_date_for($exchange, $_)->epoch } @dates));
     $self->_cache->{$method_name}{$key} = $value;
 
-    return;
+    return undef;
 }
 
 =head1 METHODS - TRADING DAYS RELATED
@@ -313,13 +313,10 @@ Return true is exchange is open at the given epoch, false otherwise.
 sub is_open_at {
     my ($self, $exchange, $date) = @_;
 
-    my $opening = $self->opening_on($exchange, $date);
-
-    return unless $opening;
-    return if $self->_is_in_trading_break($exchange, $date);
+    return undef if (not $self->opening_on($exchange, $date) or $self->_is_in_trading_break($exchange, $date));
     return 1 if (not $date->is_before($opening) and not $date->is_after($self->closing_on($exchange, $date)));
     # if everything falls through, assume it is not open
-    return;
+    return undef;
 }
 
 =head2 seconds_since_open_at
@@ -481,7 +478,7 @@ Returns true if the exchange opens late on the given date.
 sub opens_late_on {
     my ($self, $exchange, $when) = @_;
 
-    return unless $self->trades_on($exchange, $when);
+    return undef unless $self->trades_on($exchange, $when);
 
     my $opens_late;
     my $listed = $self->_get_partial_trading_for($exchange, 'late_opens', $when);
@@ -543,7 +540,7 @@ Returns a Date::Utility object on a trading day where the exchange does not clos
 sub regular_trading_day_after {
     my ($self, $exchange, $when) = @_;
 
-    return if $self->closing_on($exchange, $when);
+    return undef if $self->closing_on($exchange, $when);
 
     my $counter = 0;
     my $regular_trading_day = $self->trade_date_after($exchange, $when);
@@ -636,13 +633,13 @@ sub _get_holidays_for {
     my $calendar = $self->calendar->{holidays};
     my $holiday  = $calendar->{$date};
 
-    return unless $holiday;
+    return undef unless $holiday;
 
     foreach my $holiday_desc (keys %$holiday) {
         return $holiday_desc if (first { $symbol eq $_ } @{$holiday->{$holiday_desc}});
     }
 
-    return;
+    return undef;
 }
 
 sub _is_in_trading_break {
@@ -737,14 +734,14 @@ sub _get_partial_trading_for {
     my $date            = $when->truncate_to_day->epoch;
     my $partial_defined = $cached->{$date};
 
-    return unless $partial_defined;
+    return undef unless $partial_defined;
 
     foreach my $close_time (keys %{$cached->{$date}}) {
         my $symbols = $cached->{$date}{$close_time};
         return $close_time if (first { $exchange->symbol eq $_ } @$symbols);
     }
 
-    return;
+    return undef;
 }
 
 sub _days_between {
@@ -900,7 +897,7 @@ sub _market_opens {
         }
     }
 
-    return;
+    return undef;
 }
 
 ## PRIVATE method _seconds_of_trading_between_epochs_days_boundary

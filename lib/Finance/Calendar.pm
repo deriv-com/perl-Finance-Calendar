@@ -312,8 +312,8 @@ Return true is exchange is open at the given epoch, false otherwise.
 
 sub is_open_at {
     my ($self, $exchange, $date) = @_;
-
-    return undef if (not $self->opening_on($exchange, $date) or $self->_is_in_trading_break($exchange, $date));
+    my $opening = $self->opening_on($exchange, $date);
+    return undef if (not $opening or $self->_is_in_trading_break($exchange, $date));
     return 1 if (not $date->is_before($opening) and not $date->is_after($self->closing_on($exchange, $date)));
     # if everything falls through, assume it is not open
     return undef;

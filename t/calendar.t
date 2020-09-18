@@ -15,33 +15,33 @@ my $date = Date::Utility->new('2013-12-01');    # first of December 2014
 
 my $calendar = {
     holidays => {
-        1367798400=> {
+        1367798400 => {
             "Early May Bank Holiday" => [qw(LSE)],
         },
-        1387929600=> {
+        1387929600 => {
             "Christmas Day" => [qw(LSE FOREX METAL)],
         },
-        1388534400=> {
+        1388534400 => {
             "New Year's Day" => [qw(LSE FOREX METAL)],
         },
-        1364774400=> {
+        1364774400 => {
             "Easter Monday" => [qw(LSE USD)],
         },
     },
     early_closes => {
-        1261612800=> {
+        1261612800 => {
             '4h30m' => ['HKSE'],
         },
-        1293148800=> {'12h30m' => ['LSE']},
-        1387843200=> {
+        1293148800 => {'12h30m' => ['LSE']},
+        1387843200 => {
             '12h30m' => ['LSE'],
         },
-        1482364800=> {
+        1482364800 => {
             '18h' => ['FOREX', 'METAL'],
         },
     },
     late_opens => {
-        1293148800=> {
+        1293148800 => {
             '2h30m' => ['HKSE'],
         },
     },
@@ -135,20 +135,20 @@ subtest 'open/close' => sub {
     # before opening time on an LSE trading day:
     my $six_am       = Date::Utility->new('3-May-13 06:00:00');
     my $six_am_epoch = $six_am->epoch;
-    is($tc->is_open_at($LSE, $six_am), undef, 'LSE not open at 6am');
-    is($tc->seconds_since_open_at($LSE, $six_am), undef, 'at 6am, LSE not open yet');
+    is($tc->is_open_at($LSE, $six_am),             undef, 'LSE not open at 6am');
+    is($tc->seconds_since_open_at($LSE, $six_am),  undef, 'at 6am, LSE not open yet');
     is($tc->seconds_since_close_at($LSE, $six_am), undef, 'at 6am, LSE hasn\'t closed yet');
 
     # after closing time on an LSE trading day:
     my $six_pm = Date::Utility->new('3-May-13 18:00:00');
-    is($tc->is_open_at($LSE, $six_pm), undef, 'LSE not open at 6pm.');
-    is($tc->seconds_since_open_at($LSE, $six_pm), 11 * 60 * 60, 'at 6pm, LSE opening was 11 hours ago.');
+    is($tc->is_open_at($LSE, $six_pm),             undef,         'LSE not open at 6pm.');
+    is($tc->seconds_since_open_at($LSE, $six_pm),  11 * 60 * 60,  'at 6pm, LSE opening was 11 hours ago.');
     is($tc->seconds_since_close_at($LSE, $six_pm), 2.5 * 60 * 60, 'at 6pm, LSE has been closed for 2.5 hours.');
 
     # LSE holiday:
     my $tc_holiday = Date::Utility->new('6-May-13 12:00:00');
-    is($tc->is_open_at($LSE, $tc_holiday), undef, 'is_open_at LSE not open today at all.');
-    is($tc->seconds_since_open_at($LSE, $tc_holiday), undef, 'seconds_since_open_at LSE not open today at all.');
+    is($tc->is_open_at($LSE, $tc_holiday),             undef, 'is_open_at LSE not open today at all.');
+    is($tc->seconds_since_open_at($LSE, $tc_holiday),  undef, 'seconds_since_open_at LSE not open today at all.');
     is($tc->seconds_since_close_at($LSE, $tc_holiday), undef, 'seconds_since_close_at LSE not open today at all.');
     # DST stuff
     # Europe: last Sunday of March.
@@ -177,7 +177,7 @@ subtest 'open/close' => sub {
     );
     is($tc->opening_on($LSE, Date::Utility->new('12-May-13')), undef, 'LSE doesn\'t open on weekend (12-May-13).');
     ok(!$tc->closes_early_on($LSE, Date::Utility->new('23-Dec-13')), 'LSE doesn\'t close early on 23-Dec-10');
-    ok($tc->closes_early_on($LSE, Date::Utility->new('24-Dec-13')), 'LSE closes early on 24-Dec-10');
+    ok($tc->closes_early_on($LSE, Date::Utility->new('24-Dec-13')),  'LSE closes early on 24-Dec-10');
     is(
         $tc->closing_on($LSE, Date::Utility->new('24-Dec-13'))->epoch,
         Date::Utility->new('24-Dec-13 12:30')->epoch,
@@ -194,7 +194,7 @@ subtest 'open/close' => sub {
     my $tc_close_epoch = Date::Utility->new('3-May-13 07:40:00');
     is($tc->seconds_since_close_at($HKSE, $tc_close_epoch), 0, 'HKSE: seconds since close at close should be zero (as opposed to undef).');
     ok(!$tc->opens_late_on($HKSE, Date::Utility->new('23-Dec-13')), 'HKSE doesn\'t open late on 23-Dec-10');
-    ok($tc->opens_late_on($HKSE, Date::Utility->new('24-Dec-10')), 'HKSE opens late on 24-Dec-10');
+    ok($tc->opens_late_on($HKSE, Date::Utility->new('24-Dec-10')),  'HKSE opens late on 24-Dec-10');
     is(
         $tc->opening_on($HKSE, Date::Utility->new('24-Dec-10'))->epoch,
         Date::Utility->new('24-Dec-10 02:30')->epoch,
@@ -393,7 +393,7 @@ subtest 'seconds_of_trading_between' => sub {
 };
 
 subtest 'regular_trading_day_after' => sub {
-    my $weekend = Date::Utility->new('2014-03-29');
+    my $weekend     = Date::Utility->new('2014-03-29');
     my $regular_day = $tc->regular_trading_day_after($FOREX, $weekend);
     is($regular_day->date_yyyymmdd, '2014-03-31', 'correct regular trading day after weekend');
     my $new_year = Date::Utility->new('2014-01-01');
@@ -403,7 +403,7 @@ subtest 'regular_trading_day_after' => sub {
 
 subtest 'trading_period' => sub {
     my $trading_date = Date::Utility->new('15-Jul-2015');
-    my $p = $tc->trading_period($HKSE, $trading_date);
+    my $p            = $tc->trading_period($HKSE, $trading_date);
     # daily_open       => '1h30m',
     # trading_breaks   => [['3h59m', '5h00m']],
     # daily_close      => '7h40m',
@@ -460,14 +460,14 @@ subtest 'regularly_adjusts_trading_hours_on' => sub {
     my $friday_changes = $tc->regularly_adjusts_trading_hours_on($FOREX, $friday);
     ok($friday_changes,                       'FOREX regularly adjusts trading hours on ' . $friday->day_as_string);
     ok(exists $friday_changes->{daily_close}, ' changing daily_close');
-    is($friday_changes->{daily_close}->{to},   '20h55m',     '  to 20h55m after midnight');
+    is($friday_changes->{daily_close}->{to},   '20h55m',  '  to 20h55m after midnight');
     is($friday_changes->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
 
     ok(!$tc->regularly_adjusts_trading_hours_on($METAL, $monday), 'METAL does not regularly adjust trading hours on ' . $monday->day_as_string);
     my $metal_friday = $tc->regularly_adjusts_trading_hours_on($METAL, $friday);
     ok($metal_friday,                       'METAL regularly adjusts trading hours on ' . $friday->day_as_string);
     ok(exists $metal_friday->{daily_close}, ' changing daily_close');
-    is($metal_friday->{daily_close}->{to},   '20h55m',     '  to 20h55m after midnight');
+    is($metal_friday->{daily_close}->{to},   '20h55m',  '  to 20h55m after midnight');
     is($metal_friday->{daily_close}->{rule}, 'Fridays', '  by rule "Friday"');
 
 };

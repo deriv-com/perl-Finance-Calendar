@@ -897,6 +897,7 @@ sub _market_opens {
         }
     }
 
+    warn "_market_opens returns undef for " . $exchange->symbol . ' at ' . $when->datetime;
     return undef;
 }
 

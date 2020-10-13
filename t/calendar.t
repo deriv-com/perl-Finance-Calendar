@@ -221,6 +221,10 @@ subtest 'open/close' => sub {
     is($tc->is_open_at($ASX, Date::Utility->new('5-Apr-13 05:30:00')), undef, 'ASX not open at 5:30am GMT during Aussie "summer".');
     is($tc->is_open_at($ASX, Date::Utility->new('8-Apr-13 23:30:00')), undef, 'ASX not open at 23:30 GMT a day earlier during Aussie "winter".');
     is($tc->is_open_at($ASX, Date::Utility->new('8-Apr-13 05:30:00')), 1,     'ASX open at 5:30am GMT during Aussie "winter".');
+
+    # Checking for exact open date for opening of markets that have breaks during the day
+    my $hkse_open_date = Date::Utility->new('2020-10-13 01:30:00');
+    is($tc->seconds_since_open_at($HKSE, $hkse_open_date), 0, 'HKSE opens at midnight');
 };
 
 subtest 'seconds_of_trading_between' => sub {

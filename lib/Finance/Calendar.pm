@@ -864,7 +864,9 @@ sub _market_opens {
                 my $int_close = $breaks[$i][1];
                 my $next_open = exists $breaks[$i + 1] ? $breaks[$i + 1][0] : $close;
 
-                if ($when->is_after($current_open) and $when->is_before($int_open)) {
+                if ($when->is_before($int_open)
+                    and ($when->is_same_as($current_open) or $when->is_after($current_open)))
+                {
                     return {
                         open   => 1,
                         opens  => undef,

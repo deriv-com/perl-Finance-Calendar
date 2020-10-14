@@ -224,7 +224,7 @@ subtest 'open/close' => sub {
 
     # Checking for exact open date for opening of markets that have breaks during the day
     my $hkse_open_date = Date::Utility->new('2020-10-13 01:30:00');
-    is($tc->seconds_since_open_at($HKSE, $hkse_open_date), 0, 'HKSE opens at midnight');
+    is($tc->seconds_since_open_at($HKSE, $hkse_open_date), 0, 'seconds_since open for markets that have breaks during the day should return 0 at market open');
 };
 
 subtest 'seconds_of_trading_between' => sub {

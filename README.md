@@ -9,14 +9,28 @@ Finance::Calendar - represents the trading calendar.
 
     my $calendar = {
         holidays => {
-            '2016-11-01' => ['ASX'],
-            '2016-01-01' => ['USD'],
+            "25-Dec-2013" => {
+                "Christmas Day" => [qw(FOREX METAL)],
+            },
+            "1-Jan-2014" => {
+                "New Year's Day" => [qw( FOREX METAL)],
+            },
+            "1-Apr-2013" => {
+                "Easter Monday" => [qw( USD)],
+            },
         },
         early_closes => {
-            '2016-11-01' => ['HKSE'],
+            '24-Dec-2009' => {
+                '16:30' => ['HKSE'],
+            },
+            '22-Dec-2016' => {
+                '18:00' => ['FOREX', 'METAL'],
+            },
         },
-        late_closes => {
-            '2016-11-01' => ['HKSE'],
+        late_opens => {
+            '24-Dec-2010' => {
+                '14:30' => ['HKSE'],
+            },
         },
     };
     my $calendar = Finance::Calendar->new(calendar => $calendar);
@@ -140,11 +154,23 @@ Returns the closing time (Date::Utility) of the exchange for a given Date::Utili
 
 Defines the breaktime for this exchange.
 
+## regularly\_adjusts\_trading\_hours\_on
+
+Returns a hashref of special-case changes that may apply on specific
+trading days. Currently, this applies on Fridays only:
+
+- for forex or metals
+
+Example:
+
+    $calendar->regularly_adjusts_trading_hours_on('FOREX', time);
+
 ## closes\_early\_on
 
 \->closes\_early\_on($exchange\_object, $date\_object);
 
-Returns true if the exchange closes early on the given date.
+Returns the closing time as a [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility) instance if the exchange closes early on the given date,
+or `undef`.
 
 ## opens\_late\_on
 
@@ -189,8 +215,8 @@ Is this exchange trading on daylight savings times for the given epoch?
 
 Query an exchange for valid opening times. Expects 3 parameters:
 
-- `$exchange` - a [Finance::Exchange](https://metacpan.org/pod/Finance::Exchange) instance
-- `$date` - a [Date::Utility](https://metacpan.org/pod/Date::Utility)
+- `$exchange` - a [Finance::Exchange](https://metacpan.org/pod/Finance%3A%3AExchange) instance
+- `$date` - a [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility)
 - `$which` - which market information to request, see below
 
 The possible values for `$which` include:
@@ -199,7 +225,4 @@ The possible values for `$which` include:
 - `daily_close`
 - `trading_breaks`
 
-Returns either `undef`, a single [Date::Utility](https://metacpan.org/pod/Date::Utility), or an arrayref of [Date::Utility](https://metacpan.org/pod/Date::Utility) instances.
-
----
-
+Returns either `undef`, a single [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility), or an arrayref of [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility) instances.

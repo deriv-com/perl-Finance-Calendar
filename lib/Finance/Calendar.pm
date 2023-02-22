@@ -782,7 +782,7 @@ sub next_open_at {
     my $market_opens = $self->_market_opens($exchange, $date);
     # exchange is closed for the trading day
     unless (defined $market_opens->{open}) {
-        my $next_trading = $self->regular_trading_day_after($exchange, $date);
+        my $next_trading = $self->trade_date_after($exchange, $date);
         return $self->opening_on($exchange, $next_trading);
     }
 

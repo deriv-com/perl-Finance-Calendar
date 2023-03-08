@@ -124,7 +124,7 @@ sub trades_on {
     }
 
     my $really_when = $self->trading_date_for($exchange, $when);
-    my $result = (@{$exchange->trading_days_list}[$really_when->day_of_week] && !$self->is_holiday_for($exchange->symbol, $really_when)) ? 1 : 0;
+    my $result      = (@{$exchange->trading_days_list}[$really_when->day_of_week] && !$self->is_holiday_for($exchange->symbol, $really_when)) ? 1 : 0;
 
     $self->_set_cache($result, 'trades_on', $exchange, $when);
     return $result;
@@ -176,7 +176,7 @@ sub trade_date_after {
 
     my $date_next;
     my $counter = 1;
-    my $begin = $self->trading_date_for($exchange, $date);
+    my $begin   = $self->trading_date_for($exchange, $date);
 
     if (my $cache = $self->_get_cache('trade_date_after', $exchange, $begin)) {
         return $cache;
@@ -314,7 +314,7 @@ sub is_open_at {
     my ($self, $exchange, $date) = @_;
     my $opening = $self->opening_on($exchange, $date);
     return undef if (not $opening or $self->_is_in_trading_break($exchange, $date));
-    return 1 if (not $date->is_before($opening) and not $date->is_after($self->closing_on($exchange, $date)));
+    return 1     if (not $date->is_before($opening) and not $date->is_after($self->closing_on($exchange, $date)));
     # if everything falls through, assume it is not open
     return undef;
 }
@@ -510,7 +510,7 @@ sub seconds_of_trading_between_epochs {
 
     # step 1: calculate non-cached incomplete start-day and end_dates
     my $day_start = $start_epoch - ($start_epoch % $full_day);
-    my $day_end   = $end_epoch -   ($end_epoch % $full_day);
+    my $day_end   = $end_epoch - ($end_epoch % $full_day);
     if (($day_start != $start_epoch) && ($start_epoch < $end_epoch)) {
         $result += $self->_computed_trading_seconds($exchange, $start_epoch, min($day_start + 86399, $end_epoch));
         $start_epoch = $day_start + $full_day;
@@ -542,7 +542,7 @@ sub regular_trading_day_after {
 
     return undef if $self->closing_on($exchange, $when);
 
-    my $counter = 0;
+    my $counter             = 0;
     my $regular_trading_day = $self->trade_date_after($exchange, $when);
     while ($counter <= 10) {
         my $possible = $regular_trading_day->plus_time_interval($counter . 'd');
@@ -571,8 +571,8 @@ sub trading_period {
     my ($self, $exchange, $when) = @_;
 
     return [] if not $self->trades_on($exchange, $when);
-    my $open = $self->opening_on($exchange, $when);
-    my $close = $self->closing_on($exchange, $when);
+    my $open   = $self->opening_on($exchange, $when);
+    my $close  = $self->closing_on($exchange, $when);
     my $breaks = $self->trading_breaks($exchange, $when);
 
     my @times = ($open);
@@ -692,12 +692,12 @@ Returns either C<undef>, a single L<Date::Utility>, or an arrayref of L<Date::Ut
 sub get_exchange_open_times {
     my ($self, $exchange, $date, $which) = @_;
 
-    my $when = (ref $date) ? $date : Date::Utility->new($date);
+    my $when          = (ref $date) ? $date : Date::Utility->new($date);
     my $that_midnight = $self->trading_date_for($exchange, $when);
     my $requested_time;
     if ($self->trades_on($exchange, $that_midnight)) {
         my $dst_key = $self->_times_dst_key($exchange, $that_midnight);
-        my $ti = $exchange->market_times->{$dst_key}->{$which};
+        my $ti      = $exchange->market_times->{$dst_key}->{$which};
         my $extended_lunch_hour;
         if ($which eq 'trading_breaks') {
             my $extended_trading_breaks = $exchange->market_times->{$dst_key}->{day_of_week_extended_trading_breaks};
@@ -764,6 +764,43 @@ sub _days_between {
 
 Memoize::memoize('_days_between', NORMALIZER => '_normalize_on_just_dates');
 
+=head2 next_open_at
+
+->next_open_at($exchange_object, Date::Utility->new('2023-02-16 15:30:00'));
+
+Returns Date::Utility object of the next opening date and time.
+
+Returns undef if exchange is open for the requested date.
+
+=cut
+
+sub next_open_at {
+    my ($self, $exchange, $date) = @_;
+
+    return undef if $self->is_open_at($exchange, $date);
+
+    my $market_opens = $self->_market_opens($exchange, $date);
+    # exchange is closed for the trading day
+    unless (defined $market_opens->{open}) {
+        my $next_trading = $self->trade_date_after($exchange, $date);
+        return $self->opening_on($exchange, $next_trading);
+    }
+
+    # exchange is closed for trading breaks, will open again
+    unless ($market_opens->{open}) {
+        my $trading_breaks = $self->trading_breaks($exchange, $date);
+        foreach my $break ($trading_breaks->@*) {
+            my ($close, $open) = $break->@*;
+            if ($date->is_after($close) and $date->is_before($open)) {
+                return $open;
+            }
+        }
+    }
+
+    # we shouldn't reach here but, return undef instead of a wrong time here.
+    return undef;
+}
+
 ## PRIVATE _market_opens
 #
 # PARAMETERS :
@@ -789,11 +826,11 @@ sub _market_opens {
     my $date = $when;
     # Figure out which "trading day" we are on
     # even if it differs from the GMT calendar day.
-    my $next_day = $date->plus_time_interval('1d')->truncate_to_day;
+    my $next_day  = $date->plus_time_interval('1d')->truncate_to_day;
     my $next_open = $self->opening_on($exchange, $next_day);
     $date = $next_day if ($next_open and not $date->is_before($next_open));
 
-    my $open = $self->opening_on($exchange, $date);
+    my $open  = $self->opening_on($exchange, $date);
     my $close = $self->closing_on($exchange, $date);
 
     if (not $open) {
@@ -912,7 +949,7 @@ sub _seconds_of_trading_between_epochs_days_boundary {
     my ($self, $exchange, $start_epoch, $end_epoch) = @_;
 
     my $cache_key = join('-', $exchange->symbol, $start_epoch, $end_epoch);
-    my $result = $cached_seconds_for_interval{$cache_key} //= do {
+    my $result    = $cached_seconds_for_interval{$cache_key} //= do {
         my $head = $self->_computed_trading_seconds($exchange, $start_epoch, $start_epoch + 86399);
         if ($end_epoch - $start_epoch > $full_day - 1) {
             my $tail = $self->_seconds_of_trading_between_epochs_days_boundary($exchange, $start_epoch + $full_day, $end_epoch);
@@ -955,7 +992,7 @@ sub _computed_trading_seconds {
             for my $break_interval (@{$breaks}) {
                 my $interval_open  = $break_interval->[0];
                 my $interval_close = $break_interval->[1];
-                my $close_am       = min($interval_open->epoch, $closing_epoch);
+                my $close_am       = min($interval_open->epoch,  $closing_epoch);
                 my $open_pm        = min($interval_close->epoch, $closing_epoch);
 
                 $total_lunch_break_time = max(min($open_pm, $end), $close_am) - min(max($close_am, $start), $open_pm);

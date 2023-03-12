@@ -1,6 +1,7 @@
 Revision history for Finance-Exchange
 
 {{$NEXT}}
+    - add next_open_at
 
 0.03      2022-10-25 06:53:17+00:00 UTC
     - Fix bug for opening date of markets with breaks

@@ -226,3 +226,11 @@ The possible values for `$which` include:
 - `trading_breaks`
 
 Returns either `undef`, a single [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility), or an arrayref of [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility) instances.
+
+## next\_open\_at
+
+\->next\_open\_at($exchange\_object, Date::Utility->new('2023-02-16 15:30:00'));
+
+Returns Date::Utility object of the next opening date and time.
+
+Returns undef if exchange is open for the requested date.

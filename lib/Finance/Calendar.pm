@@ -59,7 +59,7 @@ This class is responsible for providing trading times or holidays related inform
 
 use Moose;
 
-our $VERSION = 0.01;
+our $VERSION = '0.05';
 
 use List::Util qw(min max first);
 use Date::Utility;

@@ -789,11 +789,17 @@ sub next_open_at {
     # exchange is closed for trading breaks, will open again
     unless ($market_opens->{open}) {
         my $trading_breaks = $self->trading_breaks($exchange, $date);
+        
         foreach my $break ($trading_breaks->@*) {
             my ($close, $open) = $break->@*;
             if ($date->is_after($close) and $date->is_before($open)) {
                 return $open;
             }
+        }
+
+        unless (defined $trading_breaks) {
+            my $opening_late = $self->opening_on($exchange, $date);
+            return $opening_late;
         }
     }
 

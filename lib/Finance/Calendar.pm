@@ -797,7 +797,7 @@ sub next_open_at {
             }
         }
 
-        unless (scalar $trading_breaks == 0) {
+        if (!@$trading_breaks) {
             my $opening_late = $self->opening_on($exchange, $date);
             return $opening_late;
         }

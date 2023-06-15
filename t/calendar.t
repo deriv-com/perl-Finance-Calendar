@@ -515,6 +515,11 @@ subtest 'next_open_at' => sub {
     $next_trading_time = $tc->next_open_at($HKSE, $hkse_early_monday);
     is($next_trading_time->datetime, '2023-06-12 01:30:00', 'Correct next open date and time.');
 
+    # Weekday - Exchange is in trading brake
+    my $hkse_in_break = Date::Utility->new('12-Jun-23 04:15:00');
+    $next_trading_time = $tc->next_open_at($HKSE, $hkse_in_break);
+    is($next_trading_time->datetime, '2023-06-12 05:00:00', 'Correct next open date and time.');
+
     # Weekend - Exchange is already closed and it is a weekend, should be open on next monday
     my $hkse_last_weekday = $hkse_monday_closed->plus_time_interval('4d');
     $next_trading_time = $tc->next_open_at($HKSE, $hkse_last_weekday);

@@ -430,12 +430,20 @@ sub regularly_adjusts_trading_hours_on {
     my $changes;
 
     my $rule = 'Fridays';
-    if ($exchange->symbol eq 'FOREX' or $exchange->symbol eq 'METAL') {
+    if ($exchange->symbol =~ /^(FOREX|METAL|RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY)$/) {
         $changes = {
             'daily_close' => {
                 to   => '20h55m',
                 rule => $rule,
-            }};
+            },
+        };
+    } elsif ($exchange->symbol =~ /^(RSI_METAL)$/) {
+        $changes = {
+            'daily_close' => {
+                to   => '20h45m',
+                rule => $rule,
+            },
+        };
     }
 
     return $changes;

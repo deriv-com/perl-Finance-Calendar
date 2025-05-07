@@ -59,7 +59,7 @@ This class is responsible for providing trading times or holidays related inform
 
 use Moose;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use List::Util qw(min max first);
 use Date::Utility;
@@ -406,18 +406,29 @@ sub trading_breaks {
 =head2 regularly_adjusts_trading_hours_on
 
 Returns a hashref of special-case changes that may apply on specific
-trading days. Currently, this applies on Fridays only:
+trading days. Currently, this applies on Fridays only.
 
 =over 4
 
+=item C<exchange> - a L<Finance::Exchange> instance
 
-=item * for forex or metals
+=item C<when> - a L<Date::Utility> instance
 
 =back
 
 Example:
 
- $calendar->regularly_adjusts_trading_hours_on('FOREX', time);
+    my $changes = $calendar->regularly_adjusts_trading_hours_on(
+        Finance::Exchange->create_exchange('FOREX'),
+        Date::Utility->new
+    );
+    # Returns a hashref with adjusted closing time on Fridays:
+    # {
+    #     'daily_close' => {
+    #         'to' => '20h55m',
+    #         'rule' => 'Fridays (DST)'  # or 'Fridays' if not in DST
+    #     }
+    # }
 
 =cut
 
@@ -429,18 +440,21 @@ sub regularly_adjusts_trading_hours_on {
 
     my $changes;
 
-    my $rule = 'Fridays';
-    if ($exchange->symbol =~ /^(FOREX|METAL|RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY)$/) {
+    my $use_dst_time = $self->is_in_dst_at($exchange, $when);
+    my $rule         = $use_dst_time ? 'Fridays (DST)' : 'Fridays';
+
+    if ($exchange->symbol =~ /^(FOREX|METAL)$/) {
         $changes = {
             'daily_close' => {
                 to   => '20h55m',
                 rule => $rule,
             },
         };
-    } elsif ($exchange->symbol =~ /^(RSI_METAL)$/) {
+    } elsif ($exchange->symbol =~ /^(RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY|RSI_METAL)$/) {
+        my $close_time = $use_dst_time ? $exchange->market_times->dst->friday_close : $exchange->market_times->standard->friday_close;
         $changes = {
             'daily_close' => {
-                to   => '20h45m',
+                to   => $close_time,
                 rule => $rule,
             },
         };

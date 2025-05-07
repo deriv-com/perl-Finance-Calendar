@@ -441,7 +441,7 @@ sub regularly_adjusts_trading_hours_on {
     my $changes;
 
     my $use_dst_time = $self->is_in_dst_at($exchange, $when);
-    my $rule         = $use_dst_time ? 'Fridays (DST)' : 'Fridays';
+    my $rule         = 'Fridays';
 
     if ($exchange->symbol =~ /^(FOREX|METAL)$/) {
         $changes = {
@@ -455,7 +455,7 @@ sub regularly_adjusts_trading_hours_on {
         $changes = {
             'daily_close' => {
                 to   => $close_time,
-                rule => $rule,
+                rule => $use_dst_time ? 'Fridays (DST)' : $rule,
             },
         };
     }

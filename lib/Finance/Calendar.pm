@@ -405,8 +405,10 @@ sub trading_breaks {
 
 =head2 regularly_adjusts_trading_hours_on
 
-Returns a hashref of special-case changes that may apply on specific
-trading days. Currently, this applies on Fridays only.
+Returns a hashref of special-case changes that may apply on specific trading days.
+Currently, this applies on:
+- Sundays (for RSI exchanges opening times)
+- Fridays (for closing times).
 
 =over 4
 
@@ -416,17 +418,31 @@ trading days. Currently, this applies on Fridays only.
 
 =back
 
-Example:
+Examples:
 
+    # Friday closing adjustment for FOREX
     my $changes = $calendar->regularly_adjusts_trading_hours_on(
         Finance::Exchange->create_exchange('FOREX'),
-        Date::Utility->new
+        Date::Utility->new('2023-02-17')  # Friday
     );
     # Returns a hashref with adjusted closing time on Fridays:
     # {
     #     'daily_close' => {
     #         'to' => '20h55m',
-    #         'rule' => 'Fridays (DST)'  # or 'Fridays' if not in DST
+    #         'rule' => 'Fridays'
+    #     }
+    # }
+
+    # Sunday opening adjustment for RSI exchanges
+    my $changes = $calendar->regularly_adjusts_trading_hours_on(
+        Finance::Exchange->create_exchange('RSI_FOREX_EURUSD'),
+        Date::Utility->new('2023-02-12')  # Sunday
+    );
+    # Returns a hashref with adjusted opening time on Sundays:
+    # {
+    #     'daily_open' => {
+    #         'to' => '22h35m',
+    #         'rule' => 'Sundays'  # or 'Sundays (DST)' if in DST
     #     }
     # }
 
@@ -435,29 +451,50 @@ Example:
 sub regularly_adjusts_trading_hours_on {
     my ($self, $exchange, $when) = @_;
 
-    # Only applies on Fridays
-    return undef if $when->day_of_week != 5;
-
+    my $day_of_week = $when->day_of_week;
     my $changes;
-
     my $use_dst_time = $self->is_in_dst_at($exchange, $when);
-    my $rule         = 'Fridays';
 
-    if ($exchange->symbol =~ /^(FOREX|METAL)$/) {
-        $changes = {
-            'daily_close' => {
-                to   => '20h55m',
-                rule => $rule,
-            },
-        };
-    } elsif ($exchange->symbol =~ /^(RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY|RSI_METAL)$/) {
-        my $close_time = $use_dst_time ? $exchange->market_times->dst->friday_close : $exchange->market_times->standard->friday_close;
-        $changes = {
-            'daily_close' => {
-                to   => $close_time,
-                rule => $use_dst_time ? 'Fridays (DST)' : $rule,
-            },
-        };
+    # Handle Sunday opening adjustments for RSI exchanges
+    if ($day_of_week == 0) {    # Sunday
+        if ($exchange->symbol =~ /^(RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY|RSI_METAL)$/) {
+            my $partial_trading = $exchange->market_times->{partial_trading};
+
+            if ($partial_trading) {
+                my $open_key  = $use_dst_time ? 'dst_open' : 'standard_open';
+                my $open_time = $partial_trading->{$open_key};
+
+                if ($open_time) {
+                    $changes = {
+                        'daily_open' => {
+                            to   => $open_time,
+                            rule => $use_dst_time ? 'Sundays (DST)' : 'Sundays',
+                        },
+                    };
+                }
+            }
+        }
+    }
+    # Handle Friday closing adjustments
+    elsif ($day_of_week == 5) {    # Friday
+        my $rule = 'Fridays';
+
+        if ($exchange->symbol =~ /^(FOREX|METAL)$/) {
+            $changes = {
+                'daily_close' => {
+                    to   => '20h55m',
+                    rule => $rule,
+                },
+            };
+        } elsif ($exchange->symbol =~ /^(RSI_FOREX_EURUSD|RSI_FOREX_GBPUSD|RSI_FOREX_USDJPY|RSI_METAL)$/) {
+            my $close_time = $use_dst_time ? $exchange->market_times->{dst}->{friday_close} : $exchange->market_times->{standard}->{friday_close};
+            $changes = {
+                'daily_close' => {
+                    to   => $close_time,
+                    rule => $use_dst_time ? 'Fridays (DST)' : $rule,
+                },
+            };
+        }
     }
 
     return $changes;

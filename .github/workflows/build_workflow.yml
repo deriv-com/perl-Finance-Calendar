@@ -13,10 +13,7 @@ jobs:
   build: 
     runs-on: ubuntu-latest
     container:
-      image: ${{ vars.DEBIAN_CI }}
-      credentials:
-        username: circle4regentmarkets
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      image: perl:5.40-bullseye
       options: --user nobody:nogroup
     defaults:
       run:

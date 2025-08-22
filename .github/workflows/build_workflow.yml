@@ -1,0 +1,48 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        perl-version:
+          - "5.24"
+          - "5.26"
+          - "5.28"
+          - "5.30"
+          - "5.32"
+          - "5.34"
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl-version }}
+    
+    - name: Install cpm
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/skaji/cpm/main/cpm | perl - install -g App::cpm
+    
+    - name: Install Dzil
+      run: |
+        cpm install -g --no-test Dist::Zilla Dist::Zilla::App::Command::cover ExtUtils::MakeMaker
+    
+    - name: Install dzil author dependencies
+      run: |
+        cpm install --no-test -g \
+        -w 2 \
+        --mirror=http://cpan.cpantesters.org/ $(dzil authordeps --missing)
+    
+    - name: Install dist deps
+      run: |
+        cpanm -n --installdeps .
+        dzil listdeps --author --missing --cpanm-versions | xargs cpanm -n
+
+    - name: Run Tests
+      run: |
+        dzil test

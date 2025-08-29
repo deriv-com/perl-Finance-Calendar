@@ -156,14 +156,41 @@ Defines the breaktime for this exchange.
 
 ## regularly\_adjusts\_trading\_hours\_on
 
-Returns a hashref of special-case changes that may apply on specific
-trading days. Currently, this applies on Fridays only:
+Returns a hashref of special-case changes that may apply on specific trading days.
+Currently, this applies on:
+\- Sundays (for RSI exchanges opening times)
+\- Fridays (for closing times).
 
-- for forex or metals
+- `exchange` - a [Finance::Exchange](https://metacpan.org/pod/Finance%3A%3AExchange) instance
+- `when` - a [Date::Utility](https://metacpan.org/pod/Date%3A%3AUtility) instance
 
-Example:
+Examples:
 
-    $calendar->regularly_adjusts_trading_hours_on('FOREX', time);
+    # Friday closing adjustment for FOREX
+    my $changes = $calendar->regularly_adjusts_trading_hours_on(
+        Finance::Exchange->create_exchange('FOREX'),
+        Date::Utility->new('2023-02-17')  # Friday
+    );
+    # Returns a hashref with adjusted closing time on Fridays:
+    # {
+    #     'daily_close' => {
+    #         'to' => '20h55m',
+    #         'rule' => 'Fridays'
+    #     }
+    # }
+
+    # Sunday opening adjustment for RSI exchanges
+    my $changes = $calendar->regularly_adjusts_trading_hours_on(
+        Finance::Exchange->create_exchange('RSI_FOREX_EURUSD'),
+        Date::Utility->new('2023-02-12')  # Sunday
+    );
+    # Returns a hashref with adjusted opening time on Sundays:
+    # {
+    #     'daily_open' => {
+    #         'to' => '22h35m',
+    #         'rule' => 'Sundays'  # or 'Sundays (DST)' if in DST
+    #     }
+    # }
 
 ## closes\_early\_on
 

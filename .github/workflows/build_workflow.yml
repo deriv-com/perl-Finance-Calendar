@@ -1,32 +1,48 @@
-name: Build workflow
-run-name: Build workflow
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - master
-  pull_request:
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+name: Test
+
+on: [push, pull_request]
+
 jobs:
-  build: 
+  test:
     runs-on: ubuntu-latest
-    container:
-      image: perl:5.40-bullseye
-      options: --user nobody:nogroup
-    defaults:
-      run:
-        shell: bash -le {0}
+    
+    strategy:
+      matrix:
+        perl-version:
+          - "5.24"
+          - "5.26"
+          - "5.28"
+          - "5.30"
+          - "5.32"
+          - "5.34"
+
     steps:
-      - name: setup CI step
-        uses: regentmarkets/github-actions/ci-setup@master
-        with:
-          read_github_ssh_key: ${{ secrets.READ_GITHUB_SSH_KEY }}
-          need_service: false
-          repository: ${{ github.repository }}
-      - name : Run Tests 
-        run: |
-          source /etc/profile.d/perl5.sh
-          dzil test && dzil xtest
-        working-directory: /home/git/${{ github.repository }}
+    - uses: actions/checkout@v4
+    
+    - name: Setup Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl-version }}
+    
+    - name: Install cpm
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/skaji/cpm/main/cpm | perl - install -g App::cpm
+    
+    - name: Install Dzil
+      run: |
+        cpm install -g --no-test Dist::Zilla Dist::Zilla::App::Command::cover ExtUtils::MakeMaker
+    
+    - name: Install dzil author dependencies
+      run: |
+        cpm install --no-test -g \
+        -w 2 \
+        --mirror=http://cpan.cpantesters.org/ $(dzil authordeps --missing)
+    
+    - name: Install dist deps
+      run: |
+        cpanm -n --installdeps .
+        dzil listdeps --author --missing --cpanm-versions | xargs cpanm -n
+
+    - name: Run Tests
+      run: |
+        dzil test

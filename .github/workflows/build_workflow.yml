@@ -71,11 +71,6 @@ jobs:
     - name: Setup Finance-Exchange share directory override
       run: |
         echo "PERL_FILE_SHAREDIR_DIST_Finance_Exchange=$PWD/perl-Finance-Exchange/share" >> $GITHUB_ENV
-        
-        echo "Config files from Finance-Exchange:"
-        ls -la perl-Finance-Exchange/share/
-        echo "Checking for TACTICAL entries:"
-        grep -c "TACTICAL_" perl-Finance-Exchange/share/exchange.yml || echo "No TACTICAL entries found"
     
     - name: Run Tests
       run: |

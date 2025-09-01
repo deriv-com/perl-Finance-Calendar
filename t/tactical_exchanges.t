@@ -17,8 +17,8 @@ my $calendar = {
 };
 
 my $tc = Finance::Calendar->new(calendar => $calendar);
-my ($TACTICAL_FOREX_EURUSD, $TACTICAL_FOREX_GBPUSD, $TACTICAL_FOREX_USDJPY, $TACTICAL_METAL, $TACTICAL_CRYPTO) =
-    map { Finance::Exchange->create_exchange($_) } qw(TACTICAL_FOREX_EURUSD TACTICAL_FOREX_GBPUSD TACTICAL_FOREX_USDJPY TACTICAL_METAL TACTICAL_CRYPTO);
+my ($TACTICAL_FOREX_EURUSD, $TACTICAL_FOREX_GBPUSD, $TACTICAL_FOREX_USDJPY, $TACTICAL_METALS, $TACTICAL_CRYPTO) =
+    map { Finance::Exchange->create_exchange($_) } qw(TACTICAL_FOREX_EURUSD TACTICAL_FOREX_GBPUSD TACTICAL_FOREX_USDJPY TACTICAL_METALS TACTICAL_CRYPTO);
 
 subtest 'tactical_trading_days' => sub {
     # Test sun_thru_fri pattern for TACTICAL forex exchanges
@@ -39,8 +39,8 @@ subtest 'tactical_trading_days' => sub {
     ok $tc->trades_on($TACTICAL_FOREX_USDJPY,  $sunday),   'TACTICAL_FOREX_USDJPY trades on Sunday';
     ok !$tc->trades_on($TACTICAL_FOREX_USDJPY, $saturday), 'TACTICAL_FOREX_USDJPY does not trade on Saturday';
 
-    ok $tc->trades_on($TACTICAL_METAL,  $sunday),   'TACTICAL_METAL trades on Sunday';
-    ok !$tc->trades_on($TACTICAL_METAL, $saturday), 'TACTICAL_METAL does not trade on Saturday';
+    ok $tc->trades_on($TACTICAL_METALS,  $sunday),   'TACTICAL_METALS trades on Sunday';
+    ok !$tc->trades_on($TACTICAL_METALS, $saturday), 'TACTICAL_METALS does not trade on Saturday';
 
     # TACTICAL_CRYPTO should trade every day
     ok $tc->trades_on($TACTICAL_CRYPTO, $sunday),   'TACTICAL_CRYPTO trades on Sunday';
@@ -82,9 +82,9 @@ subtest 'tactical_trading_hours_standard' => sub {
     is $tc->opening_on($TACTICAL_FOREX_USDJPY, $sunday)->time_hhmmss, '23:05:00', 'TACTICAL_FOREX_USDJPY Sunday opens at 23:05:00 (standard)';
     is $tc->closing_on($TACTICAL_FOREX_USDJPY, $friday)->time_hhmmss, '21:55:00', 'TACTICAL_FOREX_USDJPY Friday closes at 21:55:00 (standard)';
 
-    # TACTICAL_METAL has different Friday close (20:45)
-    is $tc->opening_on($TACTICAL_METAL, $sunday)->time_hhmmss, '23:05:00', 'TACTICAL_METAL Sunday opens at 23:05:00 (standard)';
-    is $tc->closing_on($TACTICAL_METAL, $friday)->time_hhmmss, '20:45:00', 'TACTICAL_METAL Friday closes at 20:45:00 (standard)';
+    # TACTICAL_METALS has different Friday close (20:45)
+    is $tc->opening_on($TACTICAL_METALS, $sunday)->time_hhmmss, '23:05:00', 'TACTICAL_METALS Sunday opens at 23:05:00 (standard)';
+    is $tc->closing_on($TACTICAL_METALS, $friday)->time_hhmmss, '20:45:00', 'TACTICAL_METALS Friday closes at 20:45:00 (standard)';
 
     # TACTICAL_CRYPTO should be 24/7
     is $tc->opening_on($TACTICAL_CRYPTO, $sunday)->time_hhmmss,   '00:00:00', 'TACTICAL_CRYPTO opens at 00:00:00 on Sunday (24/7)';
@@ -117,9 +117,9 @@ subtest 'tactical_trading_hours_dst' => sub {
     is $tc->opening_on($TACTICAL_FOREX_USDJPY, $sunday)->time_hhmmss, '22:05:00', 'TACTICAL_FOREX_USDJPY Sunday opens at 22:05:00 (DST)';
     is $tc->closing_on($TACTICAL_FOREX_USDJPY, $friday)->time_hhmmss, '20:55:00', 'TACTICAL_FOREX_USDJPY Friday closes at 20:55:00 (DST)';
 
-    # TACTICAL_METAL has different Friday close (19:45 in DST)
-    is $tc->opening_on($TACTICAL_METAL, $sunday)->time_hhmmss, '22:05:00', 'TACTICAL_METAL Sunday opens at 22:05:00 (DST)';
-    is $tc->closing_on($TACTICAL_METAL, $friday)->time_hhmmss, '19:45:00', 'TACTICAL_METAL Friday closes at 19:45:00 (DST)';
+    # TACTICAL_METALS has different Friday close (19:45 in DST)
+    is $tc->opening_on($TACTICAL_METALS, $sunday)->time_hhmmss, '22:05:00', 'TACTICAL_METALS Sunday opens at 22:05:00 (DST)';
+    is $tc->closing_on($TACTICAL_METALS, $friday)->time_hhmmss, '19:45:00', 'TACTICAL_METALS Friday closes at 19:45:00 (DST)';
 };
 
 subtest 'tactical_friday_close_adjustments' => sub {
@@ -149,11 +149,11 @@ subtest 'tactical_friday_close_adjustments' => sub {
     ok !$tc->closes_early_on($TACTICAL_FOREX_EURUSD, $monday), 'TACTICAL_FOREX_EURUSD does not close early on Monday';
 
     # Test different exchanges have different Friday close times
-    my $metal_friday_changes = $tc->regularly_adjusts_trading_hours_on($TACTICAL_METAL, $friday);
-    is $metal_friday_changes->{daily_close}->{to}->as_concise_string, '20h45m', 'TACTICAL_METAL Friday close is 20h45m (standard)';
+    my $metal_friday_changes = $tc->regularly_adjusts_trading_hours_on($TACTICAL_METALS, $friday);
+    is $metal_friday_changes->{daily_close}->{to}->as_concise_string, '20h45m', 'TACTICAL_METALS Friday close is 20h45m (standard)';
 
-    my $metal_friday_dst_changes = $tc->regularly_adjusts_trading_hours_on($TACTICAL_METAL, $friday_dst);
-    is $metal_friday_dst_changes->{daily_close}->{to}->as_concise_string, '19h45m', 'TACTICAL_METAL Friday close is 19h45m (DST)';
+    my $metal_friday_dst_changes = $tc->regularly_adjusts_trading_hours_on($TACTICAL_METALS, $friday_dst);
+    is $metal_friday_dst_changes->{daily_close}->{to}->as_concise_string, '19h45m', 'TACTICAL_METALS Friday close is 19h45m (DST)';
 
     # Test other tactical forex exchanges
     my $gbp_friday_changes = $tc->regularly_adjusts_trading_hours_on($TACTICAL_FOREX_GBPUSD, $friday);

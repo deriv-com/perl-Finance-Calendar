@@ -457,7 +457,7 @@ sub regularly_adjusts_trading_hours_on {
 
     # Handle Sunday opening adjustments for tactical exchanges, except tactical crypto which opens 24/7
     if ($day_of_week == 0) {    # Sunday
-        if ($exchange->symbol =~ /^(TACTICAL_FOREX.*|TACTICAL_METAL)$/) {
+        if ($exchange->symbol =~ /^(TACTICAL_FOREX.*|TACTICAL_METALS)$/) {
             my $partial_trading = $exchange->market_times->{partial_trading};
 
             if ($partial_trading) {
@@ -486,7 +486,7 @@ sub regularly_adjusts_trading_hours_on {
                     rule => $rule,
                 },
             };
-        } elsif ($exchange->symbol =~ /^(TACTICAL_FOREX.*|TACTICAL_METAL)$/) {
+        } elsif ($exchange->symbol =~ /^(TACTICAL_FOREX.*|TACTICAL_METALS)$/) {
             my $close_time = $use_dst_time ? $exchange->market_times->{dst}->{friday_close} : $exchange->market_times->{standard}->{friday_close};
             $changes = {
                 'daily_close' => {

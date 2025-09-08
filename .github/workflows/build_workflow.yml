@@ -17,32 +17,62 @@ jobs:
           - "5.34"
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Finance-Calendar
+      uses: actions/checkout@v4
+      with:
+        path: perl-Finance-Calendar
+    
+    - name: Determine Finance-Exchange repository and branch
+      id: finance-exchange-info
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_AUTHOR="${{ github.event.pull_request.head.repo.owner.login }}"
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+          echo "repository=${PR_AUTHOR}/perl-Finance-Exchange" >> $GITHUB_OUTPUT
+          echo "branch=${PR_BRANCH}" >> $GITHUB_OUTPUT
+        else
+          echo "repository=deriv-com/Finance-Exchange" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Checkout Finance-Exchange (try PR author's fork first)
+      uses: actions/checkout@v4
+      continue-on-error: true
+      id: checkout-author-fork
+      with:
+        repository: ${{ steps.finance-exchange-info.outputs.repository }}
+        ref: ${{ steps.finance-exchange-info.outputs.branch }}
+        path: perl-Finance-Exchange
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Checkout Finance-Exchange (fallback to main repo master)
+      uses: actions/checkout@v4
+      if: steps.checkout-author-fork.outcome == 'failure'
+      with:
+        repository: deriv-com/perl-Finance-Exchange
+        ref: master
+        path: perl-Finance-Exchange
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Perl
       uses: shogo82148/actions-setup-perl@v1
       with:
         perl-version: ${{ matrix.perl-version }}
     
-    - name: Install cpm
+    - name: Install cpanm
       run: |
-        curl -fsSL https://raw.githubusercontent.com/skaji/cpm/main/cpm | perl - install -g App::cpm
+        curl -L https://cpanmin.us | perl - --sudo App::cpanminus
     
-    - name: Install Dzil
+    - name: Install dependencies
       run: |
-        cpm install -g --no-test Dist::Zilla Dist::Zilla::App::Command::cover ExtUtils::MakeMaker
-    
-    - name: Install dzil author dependencies
-      run: |
-        cpm install --no-test -g \
-        -w 2 \
-        --mirror=http://cpan.cpantesters.org/ $(dzil authordeps --missing)
-    
-    - name: Install dist deps
-      run: |
+        cd perl-Finance-Calendar
         cpanm -n --installdeps .
-        dzil listdeps --author --missing --cpanm-versions | xargs cpanm -n
-
+    
+    - name: Setup Finance-Exchange share directory override
+      run: |
+        echo "PERL_FILE_SHAREDIR_DIST_Finance_Exchange=$PWD/perl-Finance-Exchange/share" >> $GITHUB_ENV
+    
     - name: Run Tests
       run: |
-        dzil test
+        cd perl-Finance-Calendar
+        prove -l t/

@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - name: Checkout Finance-Calendar
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         path: perl-Finance-Calendar
       env:
@@ -39,7 +39,7 @@ jobs:
         fi
     
     - name: Checkout Finance-Exchange (try PR author's fork first)
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       continue-on-error: true
       id: checkout-author-fork
       with:
@@ -49,7 +49,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Checkout Finance-Exchange (fallback to main repo master)
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       if: steps.checkout-author-fork.outcome == 'failure'
       with:
         repository: deriv-com/perl-Finance-Exchange
